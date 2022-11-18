@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+import "google/protobuf/struct.proto";
+
+package env;
+
+service Env {
+
+  rpc Initialize(EnvID) returns (Status) {}
+
+  rpc Reset(ResetArgs) returns (ResetReturn) {}
+
+  rpc Step(Action) returns (StepReturn) {}
+
+}
+
+
+message EnvID {
+  string env_id = 1;
+}
+
+message Status {
+  bool status = 1;
+}
+
+message NumpyArray {
+    bytes data = 1;
+    bytes shape = 2;
+    string dtype = 3;
+}
+
+message Action {
+  int32 action = 1;
+}
+
+message Seed {
+  int32 seed = 1;
+}
+
+message Options {
+  map<string, google.protobuf.Value> params = 1;
+}
+
+message Info {
+  map<string, google.protobuf.Value> params = 1;
+}
+
+message ResetArgs {
+  int32 seed = 1;
+  Options options = 2;
+}
+
+message ResetReturn {
+  NumpyArray obs = 1;
+  Info info = 2;
+}
+
+message StepReturn {
+  NumpyArray obs = 1;
+  float reward = 2;
+  bool terminated = 3;
+  bool truncated = 4;
+  Info info = 5;
+}
