@@ -46,13 +46,13 @@ message Info {
 }
 
 message ResetArgs {
-  int32 seed = 1;
-  Options options = 2;
+  optional int32 seed = 1;
+  map<string, google.protobuf.Value> options = 2;
 }
 
 message ResetReturn {
   NumpyArray obs = 1;
-  Info info = 2;
+  map<string, google.protobuf.Value> info = 2;
 }
 
 message StepReturn {
@@ -60,5 +60,15 @@ message StepReturn {
   float reward = 2;
   bool terminated = 3;
   bool truncated = 4;
-  Info info = 5;
+  map<string, google.protobuf.Value> info = 5;
+}
+
+message GymnasiumMessage {
+  oneof message {
+    StepReturn step_return = 1;
+    ResetReturn reset_return = 2;
+    ResetArgs reset_args = 3;
+    NumpyArray action = 4;
+    bool close = 5;
+  }
 }

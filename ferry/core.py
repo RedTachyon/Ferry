@@ -7,14 +7,6 @@ import gymnasium as gym
 from ferry.gym_grpc import gym_pb2_grpc, gym_pb2
 
 
-def encode(array: np.ndarray) -> gym_pb2.NumpyArray:
-    return gym_pb2.NumpyArray(data=array.tobytes(), shape=np.array(array.shape).tobytes(), dtype=str(array.dtype))
-
-
-def decode(data: gym_pb2.NumpyArray) -> np.ndarray:
-    return np.frombuffer(data.data, dtype=data.dtype).reshape(np.frombuffer(data.shape, dtype=int))
-
-
 class ClientEnv(gym.Env):
     def __init__(self, env_id: str, port: int = 50051):
         self.channel = grpc.insecure_channel(f"localhost:{port}")
@@ -29,3 +21,8 @@ class ClientEnv(gym.Env):
 
     def close(self):
         self.channel.close()
+
+"""
+GENERAL MODEL: (ML-Agents-like)
+Environment logic has a client. When it wants a decision, it sends a request to the server. 
+"""
