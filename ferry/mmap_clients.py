@@ -17,6 +17,10 @@ class ClientBackend:
 
         self.communicator = Communicator("ferry_client", "ferry_server", "ferry_lock", port=port, create=False)
 
+        for i in [1, 3, 5, 7]:
+            self.communicator.get_lock(i)
+
+
         print(f"Backend client listening on port {port}")
 
     def run(self):
@@ -25,7 +29,15 @@ class ClientBackend:
             # response = self.communicator.receive_message()
             print("Requesting a decision")
 
-            response = self.request_decision()
+
+            self.communicator.wait_lock(0)
+            self.communicator.send_message(gym_ferry_pb2.GymnasiumMessage(request=True))
+            self.communicator.release_lock(1)
+
+            self.communicator.wait_lock(2)
+            response = self.communicator.receive_message()
+            self.communicator.release_lock(3)
+
             print(f"Received a decision: {response}")
 
             if response.HasField("action"):
@@ -33,42 +45,31 @@ class ClientBackend:
                 if action.size == 1:
                     action = action[0]
                 obs, reward, terminated, truncated, info = self.env.step(action)
-                step_return = create_gymnasium_message(step_return=(obs, reward, terminated, truncated, info))
-                print(f"Sending step return: {step_return}")
-                self.communicator.send_message(step_return)
-                print("Sent step return")
+                msg = create_gymnasium_message(step_return=(obs, reward, terminated, truncated, info))
 
             elif response.HasField("reset_args"):
                 seed = response.reset_args.seed if response.reset_args.seed != -1 else None
                 options = unwrap_dict(response.reset_args.options)
                 obs, info = self.env.reset(seed=seed, options=options)
-                reset_return = create_gymnasium_message(reset_return=(obs, info))
-                print(f"Sending reset return: {reset_return}")
-                self.communicator.send_message(reset_return)
-                print("Sent reset return")
+                msg = create_gymnasium_message(reset_return=(obs, info))
 
             elif response.HasField("close"):
                 self.env.close()
-                break
+                return
 
             else:
                 # Send a dummy message to request a decision
                 raise ValueError("Received an invalid message")
 
-            print("Receiving dummy")
+            print(f"Sending message: {msg}")
+            self.communicator.wait_lock(4)
+            self.communicator.send_message(msg)
+            self.communicator.release_lock(5)
 
+            print("Receiving dummy")
             self.communicator.receive_message()  # dummy
             print("Received dummy")
 
-
-    def request_decision(self):
-        decision_request = gym_ferry_pb2.GymnasiumMessage(dummy=True)
-        self.communicator.send_message(decision_request)
-        self.communicator.get_lock()
-
-        response = self.communicator.receive_message()
-        self.communicator.release_lock()
-        return response
 
 class ClientEnv:  # (gym.Env)
     def __init__(self, port: int = 50051):
