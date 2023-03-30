@@ -74,6 +74,7 @@ class Communicator:
 
         self.lock_write = lock_func(f"{lock_name}_write:{port}", 1)
         self.lock_read = lock_func(f"{lock_name}_read:{port}", 0)
+        self.lock_sync2 = lock_func(f"{lock_name}_sync:{port}", 1)
 
     def send_message(self, msg: gym_ferry_pb2.GymnasiumMessage):
         print(f"Trying to send message {msg}")
@@ -106,6 +107,22 @@ class Communicator:
         print("Sending sync dummy message")
         self.send_message(gym_ferry_pb2.GymnasiumMessage(dummy=True))
 
+
+    def get_lock(self):
+        # breakpoint()
+        print(f"GETTING LOCK -1 {self.lock_sync2.name}")
+        self.lock_sync2.acquire()
+        print(f"GOT LOCK -1 {self.lock_sync2.name}")
+
+
+    def release_lock(self):
+        # breakpoint()
+        print(f"RELEASING LOCK +1 {self.lock_sync2.name}")
+        self.lock_sync2.release()
+        print(f"RELEASED LOCK +1 {self.lock_sync2.name}")
+
+
+
     def close(self):
         for f in [self.send_file, self.recv_file, self.send_size, self.recv_size]:
             f.close()
@@ -113,8 +130,9 @@ class Communicator:
         self.recv_file.close()
         self.send_size.close()
         self.recv_size.close()
-        self.lock_write.unlink()
-        self.lock_read.unlink()
+        self.lock_write.close()
+        self.lock_read.close()
+        self.lock_sync2.close()
 
         os.remove(f"/tmp/{self.name_send}:{self.port}")
         os.remove(f"/tmp/{self.name_recv}:{self.port}")

@@ -10,9 +10,10 @@ from ferry.utils import unwrap_dict, decode, encode, wrap_dict
 
 
 class ServerEnv(gym.Env):
-    def __init__(self, port: int = 50051):
+    def __init__(self, port: int = 5005):
         self.port = port
         self.communicator = Communicator("ferry_server", "ferry_client", "ferry_lock", port=port, create=True)
+        self.communicator.get_lock()
 
     def reset(self, seed=None, options=None):
         print("Resetting environment")
@@ -22,6 +23,8 @@ class ServerEnv(gym.Env):
         reset_args = create_gymnasium_message(reset_args=(seed, options))
 
         self.wait_for_request()
+        # breakpoint()
+        self.communicator.release_lock()
         print("Got request, sending reset args")
         self.communicator.send_message(reset_args)
         print("Sent reset args, waiting for response")
@@ -34,7 +37,10 @@ class ServerEnv(gym.Env):
                 obs = decode(response.reset_return.obs)
                 info = unwrap_dict(response.reset_return.info)
                 print("Sending a dummy")
+                # breakpoint()
+                self.communicator.get_lock()
                 self.communicator.send_dummy()  # For synchronization
+
                 print("Sent dummy")
                 return obs, info
 
@@ -42,6 +48,7 @@ class ServerEnv(gym.Env):
         action_msg = create_gymnasium_message(action=action)
 
         self.wait_for_request()
+        self.communicator.release_lock()
         self.communicator.send_message(action_msg)
 
         while True:
@@ -52,7 +59,10 @@ class ServerEnv(gym.Env):
                 terminated = response.step_return.terminated
                 truncated = response.step_return.truncated
                 info = unwrap_dict(response.step_return.info)
+                # breakpoint()
+                self.communicator.get_lock()
                 self.communicator.send_dummy()  # For synchronization
+
                 return obs, reward, terminated, truncated, info
 
     def close(self):
@@ -60,6 +70,7 @@ class ServerEnv(gym.Env):
 
     def wait_for_request(self):
         while True:
+            # self.communicator.release_lock()
             response = self.communicator.receive_message()
             if response.HasField("dummy"):
                 return

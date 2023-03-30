@@ -11,7 +11,7 @@ from ferry.utils import wrap_dict, decode, unwrap_dict
 
 
 class ClientBackend:
-    def __init__(self, env_id: str, port: int = 50051):
+    def __init__(self, env_id: str, port: int = 5005):
         self.env = gym.make(env_id)
         self.env.reset()
 
@@ -24,7 +24,6 @@ class ClientBackend:
             # Wait for a decision request
             # response = self.communicator.receive_message()
             print("Requesting a decision")
-            # time.sleep(0.1)
 
             response = self.request_decision()
             print(f"Received a decision: {response}")
@@ -54,21 +53,21 @@ class ClientBackend:
 
             else:
                 # Send a dummy message to request a decision
-                decision_request = gym_ferry_pb2.GymnasiumMessage(dummy=True)
-                self.communicator.send_message(decision_request)
+                raise ValueError("Received an invalid message")
 
             print("Receiving dummy")
 
             self.communicator.receive_message()  # dummy
-
             print("Received dummy")
 
 
     def request_decision(self):
         decision_request = gym_ferry_pb2.GymnasiumMessage(dummy=True)
         self.communicator.send_message(decision_request)
+        self.communicator.get_lock()
 
         response = self.communicator.receive_message()
+        self.communicator.release_lock()
         return response
 
 class ClientEnv:  # (gym.Env)

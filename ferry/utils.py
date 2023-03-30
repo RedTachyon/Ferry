@@ -12,7 +12,8 @@ from google.protobuf.struct_pb2 import Struct
 
 
 def encode(array: np.ndarray | int) -> gym_ferry_pb2.NumpyArray:
-    return gym_ferry_pb2.NumpyArray(data=np.array(array).tobytes(), shape=np.array(array.shape).tobytes(), dtype=str(array.dtype))
+    # array = np.asarray(array)
+    return gym_ferry_pb2.NumpyArray(data=array.tobytes(), shape=np.array(array.shape).tobytes(), dtype=str(array.dtype))
 
 
 def decode(data: gym_ferry_pb2.NumpyArray) -> np.ndarray:
