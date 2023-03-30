@@ -70,5 +70,6 @@ message GymnasiumMessage {
     ResetArgs reset_args = 3;
     NumpyArray action = 4;
     bool close = 5;
+    bool dummy = 6;
   }
 }

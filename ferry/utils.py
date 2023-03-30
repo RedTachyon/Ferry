@@ -1,19 +1,21 @@
+from __future__ import annotations
+
 from typing import Any
 
 import google.protobuf.internal.containers
 import numpy as np
 
-from ferry.gym_grpc import gym_pb2
+from ferry.gym_grpc import gym_ferry_pb2
 
 from google.protobuf.struct_pb2 import Value
 from google.protobuf.struct_pb2 import Struct
 
 
-def encode(array: np.ndarray) -> gym_pb2.NumpyArray:
-    return gym_pb2.NumpyArray(data=array.tobytes(), shape=np.array(array.shape).tobytes(), dtype=str(array.dtype))
+def encode(array: np.ndarray | int) -> gym_ferry_pb2.NumpyArray:
+    return gym_ferry_pb2.NumpyArray(data=np.array(array).tobytes(), shape=np.array(array.shape).tobytes(), dtype=str(array.dtype))
 
 
-def decode(data: gym_pb2.NumpyArray) -> np.ndarray:
+def decode(data: gym_ferry_pb2.NumpyArray) -> np.ndarray:
     return np.frombuffer(data.data, dtype=data.dtype).reshape(np.frombuffer(data.shape, dtype=int))
 
 

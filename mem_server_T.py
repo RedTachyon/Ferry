@@ -1,8 +1,9 @@
-from ferry import ClientEnv
+
+from ferry import ServerEnv
 
 import numpy as np
 from tqdm import trange
-env = ClientEnv()
+env = ServerEnv()
 
 env.reset()
 for i in trange(10000):

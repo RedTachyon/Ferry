@@ -1,4 +1,4 @@
-from ferry.gpt_memory import MemServer
+from ferry import ServerBackend
 
-server = MemServer("CartPole-v0")
+server = ServerBackend("CartPole-v1")
 server.run()
