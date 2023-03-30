@@ -14,10 +14,10 @@ class ServerEnv(gym.Env):
         self.port = port
         self.communicator = Communicator("ferry_server", "ferry_client", "ferry_lock", port=port, create=True)
 
-        for i in [0, 2, 4, 6]:
-            self.communicator.get_lock(i)
+        # for i in [0, 2, 4, 6]:
+        #     self.communicator.get_lock(i)
 
-        self.communicator.release_lock(0)
+        # self.communicator.release_lock(0)
 
     def reset(self, seed=None, options=None):
         print("Resetting environment")
@@ -26,59 +26,66 @@ class ServerEnv(gym.Env):
 
         reset_args = create_gymnasium_message(reset_args=(seed, options))
 
-        self.wait_for_request()
-        # breakpoint()
-        print("Got request, sending reset args")
         self.communicator.wait_lock(1)
+        _request = self.communicator.receive_message()
+
+        print("Got request, sending reset args")
         self.communicator.send_message(reset_args)
+
+        self.communicator.get_lock(4)
         self.communicator.release_lock(2)
         print("Sent reset args, waiting for response")
 
         print("Receiving a message")
         self.communicator.wait_lock(3)
         response = self.communicator.receive_message()
-        self.communicator.release_lock(4)
 
         if response.HasField("reset_return"):
-            print("Got response")
             obs = decode(response.reset_return.obs)
             info = unwrap_dict(response.reset_return.info)
-            print("Sending a dummy")
-            # breakpoint()
-            self.communicator.wait_lock(5)
+
             self.communicator.send_message(gym_ferry_pb2.GymnasiumMessage(status=True))
-            self.communicator.release_lock(6)
+            self.communicator.get_lock(2)
+            self.communicator.release_lock(4)
 
             print("Sent dummy")
             return obs, info
 
     def step(self, action: np.ndarray | int):
+        print("GOT HERE")
         action_msg = create_gymnasium_message(action=action)
 
-        self.wait_for_request()
-        self.communicator.send_message(action_msg)
+        self.communicator.wait_lock(1)
+        _request = self.communicator.receive_message()
 
+        self.communicator.send_message(action_msg)
+        self.communicator.get_lock(4)
+        self.communicator.release_lock(2)
+
+        self.communicator.wait_lock(3)
         response = self.communicator.receive_message()
+
         if response.HasField("step_return"):
             obs = decode(response.step_return.obs)
             reward = response.step_return.reward
             terminated = response.step_return.terminated
             truncated = response.step_return.truncated
             info = unwrap_dict(response.step_return.info)
-            # breakpoint()
             self.communicator.send_message(gym_ferry_pb2.GymnasiumMessage(status=True))
+            self.communicator.get_lock(2)
+            self.communicator.release_lock(4)
 
             return obs, reward, terminated, truncated, info
 
     def close(self):
         self.communicator.close()
 
-    def wait_for_request(self):
-        while True:
-            # self.communicator.release_lock()
-            response = self.communicator.receive_message()
-            if response.HasField("request"):
-                return
+    # def wait_for_request(self):
+    #     while True:
+    #         # self.communicator.release_lock()
+    #         response = self.communicator.receive_message()
+    #         if response.HasField("request"):
+    #             return
 
 class ServerBackend:
     def __init__(self, env_id: str, port: int = 50051):

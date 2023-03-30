@@ -17,8 +17,8 @@ class ClientBackend:
 
         self.communicator = Communicator("ferry_client", "ferry_server", "ferry_lock", port=port, create=False)
 
-        for i in [1, 3, 5, 7]:
-            self.communicator.get_lock(i)
+        # for i in [1, 3, 5, 7]:
+        #     self.communicator.get_lock(i)
 
 
         print(f"Backend client listening on port {port}")
@@ -30,13 +30,16 @@ class ClientBackend:
             print("Requesting a decision")
 
 
-            self.communicator.wait_lock(0)
+            # self.communicator.wait_lock(0)
             self.communicator.send_message(gym_ferry_pb2.GymnasiumMessage(request=True))
+            self.communicator.get_lock(3)
             self.communicator.release_lock(1)
 
+            print("Sleeping")
+            time.sleep(0.01)
             self.communicator.wait_lock(2)
             response = self.communicator.receive_message()
-            self.communicator.release_lock(3)
+            # self.communicator.release_lock(3)
 
             print(f"Received a decision: {response}")
 
@@ -62,12 +65,16 @@ class ClientBackend:
                 raise ValueError("Received an invalid message")
 
             print(f"Sending message: {msg}")
-            self.communicator.wait_lock(4)
+            # self.communicator.wait_lock(4)
             self.communicator.send_message(msg)
-            self.communicator.release_lock(5)
+            self.communicator.get_lock(1)
+            self.communicator.release_lock(3)
+
 
             print("Receiving dummy")
+            self.communicator.wait_lock(4)
             self.communicator.receive_message()  # dummy
+            # self.communicator.release_lock()
             print("Received dummy")
 
 

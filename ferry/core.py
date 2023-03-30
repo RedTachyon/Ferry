@@ -74,13 +74,10 @@ class Communicator:
 
         if create:
             self.close_locks(f"{lock_name}_write:{port}", f"{lock_name}_read:{port}", f"{lock_name}_sync2:{port}", f"{lock_name}_sync1:{port}")
-            self.close_locks(f"{lock_name}_stage_0:{port}", f"{lock_name}_stage_1:{port}", f"{lock_name}_stage_2:{port}", f"{lock_name}_stage_3:{port}")
+            self.close_locks(*[f"{lock_name}_stage_{i}:{port}" for i in range(8)])
 
         self.lock_write = lock_func(f"{lock_name}_write:{port}", 1)
         self.lock_read = lock_func(f"{lock_name}_read:{port}", 0)
-
-        self.lock_sync1 = lock_func(f"{lock_name}_sync1:{port}", 1)
-        self.lock_sync2 = lock_func(f"{lock_name}_sync2:{port}", 1)
 
 
         self.stage_locks = [
@@ -132,38 +129,6 @@ class Communicator:
         print(f"Received message {msg}")
         return msg
 
-    # def send_dummy(self):
-    #     print("Sending sync dummy message")
-    #     self.send_message(gym_ferry_pb2.GymnasiumMessage(dummy=True))
-
-    def get_lock_a(self):
-        # breakpoint()
-        print(f"GETTING LOCK 1 {self.lock_sync1.name}")
-        self.lock_sync1.acquire()
-        print(f"GOT LOCK 1 {self.lock_sync1.name}")
-
-
-    def release_lock_a(self):
-        # breakpoint()
-        print(f"RELEASING LOCK 1 {self.lock_sync1.name}")
-        self.lock_sync1.release()
-        print(f"RELEASED LOCK 1 {self.lock_sync1.name}")
-
-
-    def get_lock_b(self):
-        # breakpoint()
-        print(f"GETTING LOCK 2 {self.lock_sync2.name}")
-        self.lock_sync2.acquire()
-        print(f"GOT LOCK 2 {self.lock_sync2.name}")
-
-
-    def release_lock_b(self):
-        # breakpoint()
-        print(f"RELEASING LOCK 2 {self.lock_sync2.name}")
-        self.lock_sync2.release()
-        print(f"RELEASED LOCK 2 {self.lock_sync2.name}")
-
-
     def close_locks(self, *args):
         for name in args:
             try:
@@ -186,7 +151,6 @@ class Communicator:
         self.recv_size.close()
         self.lock_write.close()
         self.lock_read.close()
-        self.lock_sync2.close()
 
         os.remove(f"/tmp/{self.name_send}:{self.port}")
         os.remove(f"/tmp/{self.name_recv}:{self.port}")
