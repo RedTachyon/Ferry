@@ -36,7 +36,7 @@ class ClientBackend:
             self.communicator.release_lock(1)
 
             print("Sleeping")
-            time.sleep(0.01)
+            # time.sleep(0.1)
             self.communicator.wait_lock(2)
             response = self.communicator.receive_message()
             # self.communicator.release_lock(3)

@@ -3,6 +3,7 @@ from __future__ import annotations
 import mmap
 import os
 import time
+from datetime import datetime
 from typing import Optional, Any
 
 import numpy as np
@@ -12,7 +13,8 @@ from ferry.gym_grpc import gym_ferry_pb2
 from ferry.gym_grpc.gym_ferry_pb2 import GymnasiumMessage, StepReturn, ResetArgs
 from ferry.utils import encode, wrap_dict
 
-
+def get_time() -> str:
+    return datetime.utcnow().strftime("%H:%M:%S.%f")
 def create_memory_map(file_path: str, size: int = 1024) -> mmap.mmap:
     # Create a new file and set its size to the given size
 
@@ -87,23 +89,23 @@ class Communicator:
 
 
     def wait_lock(self, num: int):
-        print(f"CHECKING LOCK {num} {self.stage_locks[num].name}")
+        print(f"{get_time()} CHECKING LOCK {num} {self.stage_locks[num].name}")
         self.stage_locks[num].acquire()
         self.stage_locks[num].release()
-        print(f"CHECKED LOCK {num} {self.stage_locks[num].name}")
+        print(f"{get_time()} CHECKED LOCK {num} {self.stage_locks[num].name}")
 
     def get_lock(self, num: int):
-        print(f"GETTING LOCK {num} {self.stage_locks[num].name}")
+        print(f"{get_time()} GETTING LOCK {num} {self.stage_locks[num].name}")
         self.stage_locks[num].acquire()
-        print(f"GOT LOCK {num} {self.stage_locks[num].name}")
+        print(f"{get_time()} GOT LOCK {num} {self.stage_locks[num].name}")
 
     def release_lock(self, num: int):
-        print(f"RELEASING LOCK {num} {self.stage_locks[num].name}")
+        print(f"{get_time()} RELEASING LOCK {num} {self.stage_locks[num].name}")
         self.stage_locks[num].release()
-        print(f"RELEASED LOCK {num} {self.stage_locks[num].name}")
+        print(f"{get_time()} RELEASED LOCK {num} {self.stage_locks[num].name}")
 
     def send_message(self, msg: gym_ferry_pb2.GymnasiumMessage):
-        print(f"Trying to send message {msg}")
+        # print(f"Trying to send message {msg}")
         serialized_msg = msg.SerializeToString()
         with self.lock_write:
             self.send_file[:len(serialized_msg)] = serialized_msg
@@ -111,7 +113,7 @@ class Communicator:
         self.lock_read.release()
 
     def receive_message(self) -> gym_ferry_pb2.GymnasiumMessage:
-        print(f"Trying to receive message")
+        # print(f"Trying to receive message")
         self.lock_read.acquire()
         msg = gym_ferry_pb2.GymnasiumMessage()
         with self.lock_write:
@@ -126,7 +128,7 @@ class Communicator:
             msg.ParseFromString(serialized_msg)
             self.recv_size[:4] = (0).to_bytes(4, 'little')
 
-        print(f"Received message {msg}")
+        # print(f"Received message {msg}")
         return msg
 
     def close_locks(self, *args):
