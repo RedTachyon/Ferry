@@ -93,7 +93,13 @@ class ServerBackend:
         self.env.reset()
 
         self.communicator = Communicator("ferry_server", "ferry_client", "ferry_lock", port=port, create=True)
+        self.communicator.get_lock(1)
+        self.communicator.get_lock(3)
+        self.communicator.get_lock(5)
 
+        print("Waiting for handshake")
+        self.communicator.send_message(gym_ferry_pb2.GymnasiumMessage(request=True))
+        self.communicator.receive_message() # handshake
         print(f"Backend server listening on port {port}")
 
     def process_reset(self, msg: GymnasiumMessage):
@@ -110,25 +116,28 @@ class ServerBackend:
 
     def process_step(self, msg: GymnasiumMessage):
         action = decode(msg.action)
-        obs, reward, terminated, truncated, info = self.env.step(action[0])
+        if action.size == 1:
+            action = action[0]
+        obs, reward, terminated, truncated, info = self.env.step(action)
         step_return = gym_ferry_pb2.StepReturn(obs=encode(obs), reward=reward, terminated=terminated,
                                          truncated=truncated, info=wrap_dict(info))
         response = gym_ferry_pb2.GymnasiumMessage(step_return=step_return)
         self.communicator.send_message(response)
 
     def run(self):
+        self.communicator.release_lock(1)
         while True:
+            self.communicator.wait_lock(2)
             msg = self.communicator.receive_message()
+            self.communicator.release_lock(3)
+
+            self.communicator.wait_lock(4)
             if msg.HasField("action"):
-                # print("SERVER: stepping")
-                action = decode(msg.action)
-                if action.size == 1:
-                    action = action[0]
-                obs, reward, terminated, truncated, info = self.env.step(action)
-                response = create_gymnasium_message(step_return=(obs, reward, terminated, truncated, info))
-                self.communicator.send_message(response)
+                self.process_step(msg)
             elif msg.HasField("reset_args"):
                 self.process_reset(msg)
             elif msg.HasField("close"):
                 self.process_close(msg)
                 break
+
+            self.communicator.release_lock(5)

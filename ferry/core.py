@@ -15,7 +15,7 @@ from ferry.utils import encode, wrap_dict
 
 def get_time() -> str:
     return datetime.utcnow().strftime("%H:%M:%S.%f")
-def create_memory_map(file_path: str, size: int = 1024) -> mmap.mmap:
+def create_memory_map(file_path: str, size: int = 1024, readonly: bool = False) -> mmap.mmap:
     # Create a new file and set its size to the given size
 
     if os.path.exists(file_path):
@@ -26,15 +26,15 @@ def create_memory_map(file_path: str, size: int = 1024) -> mmap.mmap:
 
     # Memory map the file
     with open(file_path, "r+b") as f:
-        mmapped_file = mmap.mmap(f.fileno(), size, access=mmap.ACCESS_WRITE)
+        mmapped_file = mmap.mmap(f.fileno(), size, access=mmap.ACCESS_READ if readonly else mmap.ACCESS_WRITE)
 
     return mmapped_file
 
 
-def get_memory_map(file_path: str, size: int = 1024) -> mmap.mmap:
+def get_memory_map(file_path: str, size: int = 1024, readonly: bool = False) -> mmap.mmap:
     # Memory map the file
     with open(file_path, "r+b") as f:
-        mmapped_file = mmap.mmap(f.fileno(), size, access=mmap.ACCESS_WRITE)
+        mmapped_file = mmap.mmap(f.fileno(), size, access=mmap.ACCESS_READ if readonly else mmap.ACCESS_WRITE)
 
     return mmapped_file
 
@@ -72,20 +72,36 @@ class Communicator:
         self.recv_file = mmap_func(f"/tmp/{name_recv}:{port}", size)
 
         self.send_size = mmap_func(f"/tmp/{name_send}_size:{port}", 4)
-        self.recv_size = mmap_func(f"/tmp/{name_recv}_size:{port}", 4)
+        self.recv_size = mmap_func(f"/tmp/{name_recv}_size:{port}", 4, readonly=False)
+
 
         if create:
             self.close_locks(f"{lock_name}_write:{port}", f"{lock_name}_read:{port}", f"{lock_name}_sync2:{port}", f"{lock_name}_sync1:{port}")
             self.close_locks(*[f"{lock_name}_stage_{i}:{port}" for i in range(8)])
+            self.close_locks(f"{lock_name}:{port}")
 
-        self.lock_write = lock_func(f"{lock_name}_write:{port}", 1)
-        self.lock_read = lock_func(f"{lock_name}_read:{port}", 0)
+        # self.lock_write = lock_func(f"{lock_name}_write:{port}", 1)
+        # self.lock_read = lock_func(f"{lock_name}_read:{port}", 0)
+
+
+        self.lock = lock_func(f"{lock_name}:{port}", 1)
 
 
         self.stage_locks = [
             lock_func(f"{lock_name}_stage_{i}:{port}", 1)
             for i in range(8)
         ]
+
+
+    def claim(self):
+        self.lock.acquire()
+
+    def release(self):
+        self.lock.release()
+
+    def wait(self):
+        self.lock.acquire()
+        self.lock.release()
 
 
     def wait_lock(self, num: int):
@@ -105,30 +121,37 @@ class Communicator:
         print(f"{get_time()} RELEASED LOCK {num} {self.stage_locks[num].name}")
 
     def send_message(self, msg: gym_ferry_pb2.GymnasiumMessage):
-        # print(f"Trying to send message {msg}")
+        print(f"Trying to send message {msg} in {self.name_send}")
         serialized_msg = msg.SerializeToString()
-        with self.lock_write:
-            self.send_file[:len(serialized_msg)] = serialized_msg
-            self.send_size[:4] = len(serialized_msg).to_bytes(4, 'little')
-        self.lock_read.release()
+        self.send_file[:len(serialized_msg)] = serialized_msg
+        self.send_size[:4] = len(serialized_msg).to_bytes(4, 'little')
 
     def receive_message(self) -> gym_ferry_pb2.GymnasiumMessage:
-        # print(f"Trying to receive message")
-        self.lock_read.acquire()
+        # print(f"Trying to receive message in {self.name_recv}")
+        # self.lock_read.acquire()
         msg = gym_ferry_pb2.GymnasiumMessage()
-        with self.lock_write:
+        msg_size = int.from_bytes(self.recv_size[:4], 'little')
+        while msg_size == 0:
+            time.sleep(0.001)
             msg_size = int.from_bytes(self.recv_size[:4], 'little')
-            while msg_size == 0:
-                self.lock_write.release()
-                time.sleep(TIMEOUT)
-                self.lock_write.acquire()
-                msg_size = int.from_bytes(self.recv_size[:4], 'little')
-
             serialized_msg = bytes(self.recv_file[:msg_size])
             msg.ParseFromString(serialized_msg)
             self.recv_size[:4] = (0).to_bytes(4, 'little')
 
-        # print(f"Received message {msg}")
+        print(f"Received message {msg}")
+        return msg
+
+    def try_receive_message(self) -> Optional[gym_ferry_pb2.GymnasiumMessage]:
+
+        msg = gym_ferry_pb2.GymnasiumMessage()
+        msg_size = int.from_bytes(self.recv_size[:4], 'little')
+        if msg_size == 0:
+            return None
+
+        serialized_msg = bytes(self.recv_file[:msg_size])
+        msg.ParseFromString(serialized_msg)
+        self.recv_size[:4] = (0).to_bytes(4, 'little')
+
         return msg
 
     def close_locks(self, *args):
@@ -151,8 +174,8 @@ class Communicator:
         self.recv_file.close()
         self.send_size.close()
         self.recv_size.close()
-        self.lock_write.close()
-        self.lock_read.close()
+        # self.lock_write.close()
+        # self.lock_read.close()
 
         os.remove(f"/tmp/{self.name_send}:{self.port}")
         os.remove(f"/tmp/{self.name_recv}:{self.port}")
