@@ -3,184 +3,65 @@ from __future__ import annotations
 import mmap
 import os
 import time
-from datetime import datetime
-from typing import Optional, Any
+from typing import Any
+from typing import Optional
 
 import numpy as np
-import posix_ipc
 
-from ferry.gym_grpc import gym_ferry_pb2
 from ferry.gym_grpc.gym_ferry_pb2 import GymnasiumMessage, StepReturn, ResetArgs
 from ferry.utils import encode, wrap_dict
-
-def get_time() -> str:
-    return datetime.utcnow().strftime("%H:%M:%S.%f")
-def create_memory_map(file_path: str, size: int = 1024, readonly: bool = False) -> mmap.mmap:
-    # Create a new file and set its size to the given size
-
-    if os.path.exists(file_path):
-        os.remove(file_path)
-
-    with open(file_path, "wb") as f:
-        f.write(b"\x00" * size)
-
-    # Memory map the file
-    with open(file_path, "r+b") as f:
-        mmapped_file = mmap.mmap(f.fileno(), size, access=mmap.ACCESS_READ if readonly else mmap.ACCESS_WRITE)
-
-    return mmapped_file
-
-
-def get_memory_map(file_path: str, size: int = 1024, readonly: bool = False) -> mmap.mmap:
-    # Memory map the file
-    with open(file_path, "r+b") as f:
-        mmapped_file = mmap.mmap(f.fileno(), size, access=mmap.ACCESS_READ if readonly else mmap.ACCESS_WRITE)
-
-    return mmapped_file
-
-
-def create_lock(name: str, initial_value: int) -> posix_ipc.Semaphore:
-    try:
-        lock = posix_ipc.Semaphore(name, posix_ipc.O_CREAT, initial_value=initial_value)
-    except posix_ipc.ExistentialError:
-        lock = posix_ipc.Semaphore(name)
-
-    return lock
-
-
-def get_lock(name: str, initial_value: int) -> posix_ipc.Semaphore:
-    lock = posix_ipc.Semaphore(name)
-
-    return lock
-
-
-TIMEOUT = 0
+from ferry.gym_grpc import gym_ferry_pb2
 
 
 class Communicator:
-    def __init__(self, name_send: str, name_recv: str, lock_name: str, port: int = 0, size: int = 1024, create: bool = True):
-
-        self.name_send = name_send
-        self.name_recv = name_recv
-        self.port = port
+    def __init__(self, name: str, size: int = 1024, create: bool = True):
+        self.name = name
         self.size = size
 
-        mmap_func = create_memory_map if create else get_memory_map
-        lock_func = create_lock if create else get_lock
-
-        self.send_file = mmap_func(f"/tmp/{name_send}:{port}", size)
-        self.recv_file = mmap_func(f"/tmp/{name_recv}:{port}", size)
-
-        self.send_size = mmap_func(f"/tmp/{name_send}_size:{port}", 4)
-        self.recv_size = mmap_func(f"/tmp/{name_recv}_size:{port}", 4, readonly=False)
-
+        filename = f"/tmp/{name}"
 
         if create:
-            self.close_locks(f"{lock_name}_write:{port}", f"{lock_name}_read:{port}", f"{lock_name}_sync2:{port}", f"{lock_name}_sync1:{port}")
-            self.close_locks(*[f"{lock_name}_stage_{i}:{port}" for i in range(8)])
-            self.close_locks(f"{lock_name}:{port}")
-
-        # self.lock_write = lock_func(f"{lock_name}_write:{port}", 1)
-        # self.lock_read = lock_func(f"{lock_name}_read:{port}", 0)
-
-
-        self.lock = lock_func(f"{lock_name}:{port}", 1)
-
-
-        self.stage_locks = [
-            lock_func(f"{lock_name}_stage_{i}:{port}", 1)
-            for i in range(8)
-        ]
-
-
-    def claim(self):
-        self.lock.acquire()
-
-    def release(self):
-        self.lock.release()
-
-    def wait(self):
-        self.lock.acquire()
-        self.lock.release()
-
-
-    def wait_lock(self, num: int):
-        print(f"{get_time()} CHECKING LOCK {num} {self.stage_locks[num].name}")
-        self.stage_locks[num].acquire()
-        self.stage_locks[num].release()
-        print(f"{get_time()} CHECKED LOCK {num} {self.stage_locks[num].name}")
-
-    def get_lock(self, num: int):
-        print(f"{get_time()} GETTING LOCK {num} {self.stage_locks[num].name}")
-        self.stage_locks[num].acquire()
-        print(f"{get_time()} GOT LOCK {num} {self.stage_locks[num].name}")
-
-    def release_lock(self, num: int):
-        print(f"{get_time()} RELEASING LOCK {num} {self.stage_locks[num].name}")
-        self.stage_locks[num].release()
-        print(f"{get_time()} RELEASED LOCK {num} {self.stage_locks[num].name}")
+            if os.path.exists(filename):
+                os.remove(filename)
+            self.file = open(filename, "wb+")
+            self.file.truncate(size)
+            self.active_code = 0x01
+            self.wait_code = 0x02
+        else:
+            while not os.path.exists(filename):
+                time.sleep(0.001)
+            self.file = open(filename, "r+b")
+            self.active_code = 0x02
+            self.wait_code = 0x01
+        self.busy_code = 0x00
+        self.map = mmap.mmap(self.file.fileno(), size)
+        if create:
+            self.map[0] = self.active_code
 
     def send_message(self, msg: gym_ferry_pb2.GymnasiumMessage):
-        print(f"Trying to send message {msg} in {self.name_send}")
         serialized_msg = msg.SerializeToString()
-        self.send_file[:len(serialized_msg)] = serialized_msg
-        self.send_size[:4] = len(serialized_msg).to_bytes(4, 'little')
+        msg_len = len(serialized_msg).to_bytes(4, byteorder='little')
+        while self.map[0] != self.active_code:
+            pass
+        self.map[0] = self.busy_code
+        self.map[1:self.size] = b'\x00' * (self.size - 1)
 
-    def receive_message(self) -> gym_ferry_pb2.GymnasiumMessage:
-        # print(f"Trying to receive message in {self.name_recv}")
-        # self.lock_read.acquire()
+        self.map[1:5] = msg_len
+        self.map[5:len(serialized_msg) + 5] = serialized_msg
+        self.map[0] = self.wait_code
+
+    def receive_message(self) -> Optional[gym_ferry_pb2.GymnasiumMessage]:
+        while self.map[0] != self.active_code:
+            pass
+        msg_len = int.from_bytes(self.map[1:5], byteorder='little')
+        serialized_msg = bytes(self.map[5:5 + msg_len])
         msg = gym_ferry_pb2.GymnasiumMessage()
-        msg_size = int.from_bytes(self.recv_size[:4], 'little')
-        while msg_size == 0:
-            time.sleep(0.001)
-            msg_size = int.from_bytes(self.recv_size[:4], 'little')
-            serialized_msg = bytes(self.recv_file[:msg_size])
-            msg.ParseFromString(serialized_msg)
-            self.recv_size[:4] = (0).to_bytes(4, 'little')
-
-        print(f"Received message {msg}")
-        return msg
-
-    def try_receive_message(self) -> Optional[gym_ferry_pb2.GymnasiumMessage]:
-
-        msg = gym_ferry_pb2.GymnasiumMessage()
-        msg_size = int.from_bytes(self.recv_size[:4], 'little')
-        if msg_size == 0:
-            return None
-
-        serialized_msg = bytes(self.recv_file[:msg_size])
         msg.ParseFromString(serialized_msg)
-        self.recv_size[:4] = (0).to_bytes(4, 'little')
-
         return msg
-
-    def close_locks(self, *args):
-        for name in args:
-            try:
-                lock = posix_ipc.Semaphore(name)
-            except posix_ipc.ExistentialError:
-                continue
-            print(f"Closing lock {name}")
-            lock.release()
-            lock.close()
-            posix_ipc.unlink_semaphore(name)
-
-
 
     def close(self):
-        for f in [self.send_file, self.recv_file, self.send_size, self.recv_size]:
-            f.close()
-        self.send_file.close()
-        self.recv_file.close()
-        self.send_size.close()
-        self.recv_size.close()
-        # self.lock_write.close()
-        # self.lock_read.close()
-
-        os.remove(f"/tmp/{self.name_send}:{self.port}")
-        os.remove(f"/tmp/{self.name_recv}:{self.port}")
-        os.remove(f"/tmp/{self.name_send}_size:{self.port}")
-        os.remove(f"/tmp/{self.name_recv}_size:{self.port}")
+        self.file.close()
+        os.remove(f"/tmp/{self.name}")
 
 
 def create_gymnasium_message(step_return: Optional[tuple[np.ndarray, float, bool, bool, dict[str, Any]]] = None,
