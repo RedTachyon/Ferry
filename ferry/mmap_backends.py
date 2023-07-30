@@ -26,8 +26,6 @@ class ClientBackend:
 
             response = self.communicator.receive_message()
 
-            print(f"Received a decision: {response}")
-
             if response.HasField("action"):
                 action = decode(response.action)
                 if action.size == 1:
@@ -49,13 +47,10 @@ class ClientBackend:
                 # Send a dummy message to request a decision
                 raise ValueError("Received an invalid message")
 
-            print(f"Sending message: {msg}")
             self.communicator.send_message(msg)
 
 
-            print("Receiving dummy")
             self.communicator.receive_message()  # dummy
-            print("Received dummy")
 
 
 class ServerBackend:

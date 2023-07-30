@@ -6,7 +6,7 @@ from tqdm import trange
 env = ServerEnv()
 
 env.reset()
-for i in trange(100):
+for i in trange(10000):
     # print(i)
     action = np.array([0], dtype=int)
     # breakpoint()

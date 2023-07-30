@@ -15,7 +15,7 @@ class ServerEnv(gym.Env):
 
 
     def reset(self, seed=None, options=None):
-        print("Resetting environment")
+        # print("Resetting environment")
         seed = seed if seed is not None else -1
         options = wrap_dict(options) if options else {}
 
@@ -36,7 +36,6 @@ class ServerEnv(gym.Env):
             return obs, info
 
     def step(self, action: np.ndarray | int):
-        print("GOT HERE")
         action_msg = create_gymnasium_message(action=action)
 
         _request = self.communicator.receive_message()
@@ -57,13 +56,6 @@ class ServerEnv(gym.Env):
 
     def close(self):
         self.communicator.close()
-
-    # def wait_for_request(self):
-    #     while True:
-    #         # self.communicator.release_lock()
-    #         response = self.communicator.receive_message()
-    #         if response.HasField("request"):
-    #             return
 
 
 class ClientEnv:  # (gym.Env)
