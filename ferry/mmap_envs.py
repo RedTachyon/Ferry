@@ -13,6 +13,9 @@ class ServerEnv(gym.Env):
         self.port = port
         self.communicator = Communicator("ferry", create=True)
 
+        self.communicator.receive_message()
+        self.communicator.send_message(gym_ferry_pb2.GymnasiumMessage(status=True))
+
 
     def reset(self, seed=None, options=None):
         # print("Resetting environment")
@@ -21,41 +24,40 @@ class ServerEnv(gym.Env):
 
         reset_args = create_gymnasium_message(reset_args=(seed, options))
 
-        _request = self.communicator.receive_message()
 
-        self.communicator.send_message(reset_args)
+        old_msg = self.communicator.receive_message()  # 1
 
-        response = self.communicator.receive_message()
+        # obs = decode(msg.step_return.obs)
+        # reward = msg.step_return.reward
+        # terminated = msg.step_return.terminated
+        # truncated = msg.step_return.truncated
+        # info = unwrap_dict(msg.step_return.info)
 
-        if response.HasField("step_return"):
-            obs = decode(response.step_return.obs)
-            info = unwrap_dict(response.step_return.info)
 
-            self.communicator.send_message(gym_ferry_pb2.GymnasiumMessage(status=True))
+        self.communicator.send_message(reset_args)  # 2
 
-            return obs, info
+        msg = self.communicator.receive_message()  # 1
+        obs = decode(msg.step_return.obs)
+        info = unwrap_dict(msg.step_return.info)
+
+        self.communicator.send_message(gym_ferry_pb2.GymnasiumMessage(status=True))  # 2
+
+        return obs, info
 
     def step(self, action: np.ndarray | int):
         action_msg = create_gymnasium_message(action=action)
 
-        _request = self.communicator.receive_message()
+        msg = self.communicator.receive_message()  # 1
 
-        self.communicator.send_message(action_msg)
+        obs = decode(msg.step_return.obs)
+        reward = msg.step_return.reward
+        terminated = msg.step_return.terminated
+        truncated = msg.step_return.truncated
+        info = unwrap_dict(msg.step_return.info)
 
-        response = self.communicator.receive_message()
+        self.communicator.send_message(action_msg)  # 2
 
-        if response.HasField("step_return"):
-            obs = decode(response.step_return.obs)
-            reward = response.step_return.reward
-            terminated = response.step_return.terminated
-            truncated = response.step_return.truncated
-            info = unwrap_dict(response.step_return.info)
-            self.communicator.send_message(gym_ferry_pb2.GymnasiumMessage(status=True))
-
-            return obs, reward, terminated, truncated, info
-        else:
-            print(response)
-            raise ValueError("Received an invalid message")
+        return obs, reward, terminated, truncated, info
 
     def close(self):
         self.communicator.close()
@@ -92,6 +94,8 @@ class ClientEnv:  # (gym.Env)
 
     def step(self, action: np.ndarray | int):
         """Send an action to the server and receive a response."""
+        if isinstance(action, int):
+            action = np.array([action], dtype=int)
         action_msg = create_gymnasium_message(action=action)
 
         self.communicator.send_message(action_msg)

@@ -38,3 +38,14 @@ In ServerEnv:
 The `ServerEnv` implementation is inspired by ML-Agents, but we generally recommend using `ClientEnv`.
 
 TODO: profiling with fast/slow languages on the server/client
+
+## Protocol
+
+ClientBackend - ServerEnv:
+- At the beginning, there's a handshake, client sends, server also sends
+- Backend starts execution, performing initial setup
+- Backend sends an initial request, the response must be a ResetArgs
+- In a loop, Backend sends current ORTTI and listens for a response. Response can be either ResetArgs or Action
+- 
+
+IMPORTANT NOTE: `step` returns only after the backend reaches a new decision step and sends a new request.

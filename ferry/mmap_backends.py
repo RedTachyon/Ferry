@@ -16,41 +16,57 @@ class ClientBackend:
         # self.communicator = Communicator("ferry_client", "ferry_server", "ferry_lock", port=port, create=False)
         self.communicator = Communicator("ferry", create=False)
 
+        self.communicator.send_message(gym_ferry_pb2.GymnasiumMessage(status=True))
+        self.communicator.receive_message() # handshake
+
 
         print(f"Backend client listening on port {port}")
 
     def run(self):
+        # Optional setup code goes here
+
+        # When setup is done, request a reset.
+
+        self.communicator.send_message(gym_ferry_pb2.GymnasiumMessage(request=True))
+
+        msg = self.communicator.receive_message()
+        assert msg.HasField("reset_args"), "Environment must be reset before using."
+
+        seed = msg.reset_args.seed if msg.reset_args.seed != -1 else None
+        options = unwrap_dict(msg.reset_args.options)
+
+        obs, info = self.env.reset(seed=seed, options=options)
+        reward, terminated, truncated = 0., False, False
+
         while True:
+            # Execute whatever logic. When we need a decision, send the current step return and get the decision
 
-            self.communicator.send_message(gym_ferry_pb2.GymnasiumMessage(request=True))
-
-            response = self.communicator.receive_message()
+            msg = create_gymnasium_message(step_return=(obs, reward, terminated, truncated, info))
+            self.communicator.send_message(msg)  # 1
+            response = self.communicator.receive_message()  # 2
 
             if response.HasField("action"):
+                # If we got an action, execute it
                 action = decode(response.action)
                 if action.size == 1:
                     action = action[0]
                 obs, reward, terminated, truncated, info = self.env.step(action)
-                msg = create_gymnasium_message(step_return=(obs, reward, terminated, truncated, info))
 
             elif response.HasField("reset_args"):
                 seed = response.reset_args.seed if response.reset_args.seed != -1 else None
                 options = unwrap_dict(response.reset_args.options)
                 obs, info = self.env.reset(seed=seed, options=options)
-                msg = create_gymnasium_message(reset_return=(obs, info))
+                reward, terminated, truncated = 0., False, False
 
             elif response.HasField("close"):
                 self.env.close()
                 return
-
+            elif response.HasField("status"):
+                continue
             else:
                 # Send a dummy message to request a decision
                 raise ValueError("Received an invalid message")
 
-            self.communicator.send_message(msg)
-
-
-            self.communicator.receive_message()  # dummy
 
 
 class ServerBackend:
