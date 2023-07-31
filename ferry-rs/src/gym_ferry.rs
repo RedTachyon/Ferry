@@ -1277,166 +1277,6 @@ impl ::protobuf::reflect::ProtobufValue for ResetArgs {
 }
 
 #[derive(PartialEq,Clone,Default,Debug)]
-// @@protoc_insertion_point(message:env.ResetReturn)
-pub struct ResetReturn {
-    // message fields
-    // @@protoc_insertion_point(field:env.ResetReturn.obs)
-    pub obs: ::protobuf::MessageField<NDArray>,
-    // @@protoc_insertion_point(field:env.ResetReturn.info)
-    pub info: ::std::collections::HashMap<::std::string::String, ::protobuf::well_known_types::struct_::Value>,
-    // special fields
-    // @@protoc_insertion_point(special_field:env.ResetReturn.special_fields)
-    pub special_fields: ::protobuf::SpecialFields,
-}
-
-impl<'a> ::std::default::Default for &'a ResetReturn {
-    fn default() -> &'a ResetReturn {
-        <ResetReturn as ::protobuf::Message>::default_instance()
-    }
-}
-
-impl ResetReturn {
-    pub fn new() -> ResetReturn {
-        ::std::default::Default::default()
-    }
-
-    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
-        let mut oneofs = ::std::vec::Vec::with_capacity(0);
-        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, NDArray>(
-            "obs",
-            |m: &ResetReturn| { &m.obs },
-            |m: &mut ResetReturn| { &mut m.obs },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_map_simpler_accessor::<_, _, _>(
-            "info",
-            |m: &ResetReturn| { &m.info },
-            |m: &mut ResetReturn| { &mut m.info },
-        ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ResetReturn>(
-            "ResetReturn",
-            fields,
-            oneofs,
-        )
-    }
-}
-
-impl ::protobuf::Message for ResetReturn {
-    const NAME: &'static str = "ResetReturn";
-
-    fn is_initialized(&self) -> bool {
-        true
-    }
-
-    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
-        while let Some(tag) = is.read_raw_tag_or_eof()? {
-            match tag {
-                10 => {
-                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.obs)?;
-                },
-                18 => {
-                    let len = is.read_raw_varint32()?;
-                    let old_limit = is.push_limit(len as u64)?;
-                    let mut key = ::std::default::Default::default();
-                    let mut value = ::std::default::Default::default();
-                    while let Some(tag) = is.read_raw_tag_or_eof()? {
-                        match tag {
-                            10 => key = is.read_string()?,
-                            18 => value = is.read_message()?,
-                            _ => ::protobuf::rt::skip_field_for_tag(tag, is)?,
-                        };
-                    }
-                    is.pop_limit(old_limit);
-                    self.info.insert(key, value);
-                },
-                tag => {
-                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
-                },
-            };
-        }
-        ::std::result::Result::Ok(())
-    }
-
-    // Compute sizes of nested messages
-    #[allow(unused_variables)]
-    fn compute_size(&self) -> u64 {
-        let mut my_size = 0;
-        if let Some(v) = self.obs.as_ref() {
-            let len = v.compute_size();
-            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
-        }
-        for (k, v) in &self.info {
-            let mut entry_size = 0;
-            entry_size += ::protobuf::rt::string_size(1, &k);
-            let len = v.compute_size();
-            entry_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
-            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(entry_size) + entry_size
-        };
-        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
-        self.special_fields.cached_size().set(my_size as u32);
-        my_size
-    }
-
-    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        if let Some(v) = self.obs.as_ref() {
-            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
-        }
-        for (k, v) in &self.info {
-            let mut entry_size = 0;
-            entry_size += ::protobuf::rt::string_size(1, &k);
-            let len = v.cached_size() as u64;
-            entry_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
-            os.write_raw_varint32(18)?; // Tag.
-            os.write_raw_varint32(entry_size as u32)?;
-            os.write_string(1, &k)?;
-            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
-        };
-        os.write_unknown_fields(self.special_fields.unknown_fields())?;
-        ::std::result::Result::Ok(())
-    }
-
-    fn special_fields(&self) -> &::protobuf::SpecialFields {
-        &self.special_fields
-    }
-
-    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
-        &mut self.special_fields
-    }
-
-    fn new() -> ResetReturn {
-        ResetReturn::new()
-    }
-
-    fn clear(&mut self) {
-        self.obs.clear();
-        self.info.clear();
-        self.special_fields.clear();
-    }
-
-    fn default_instance() -> &'static ResetReturn {
-        static instance: ::protobuf::rt::Lazy<ResetReturn> = ::protobuf::rt::Lazy::new();
-        instance.get(ResetReturn::new)
-    }
-}
-
-impl ::protobuf::MessageFull for ResetReturn {
-    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
-        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("ResetReturn").unwrap()).clone()
-    }
-}
-
-impl ::std::fmt::Display for ResetReturn {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::protobuf::text_format::fmt(self, f)
-    }
-}
-
-impl ::protobuf::reflect::ProtobufValue for ResetReturn {
-    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
-}
-
-#[derive(PartialEq,Clone,Default,Debug)]
 // @@protoc_insertion_point(message:env.StepReturn)
 pub struct StepReturn {
     // message fields
@@ -1717,55 +1557,6 @@ impl GymnasiumMessage {
         }
     }
 
-    // .env.ResetReturn reset_return = 2;
-
-    pub fn reset_return(&self) -> &ResetReturn {
-        match self.message {
-            ::std::option::Option::Some(gymnasium_message::Message::ResetReturn(ref v)) => v,
-            _ => <ResetReturn as ::protobuf::Message>::default_instance(),
-        }
-    }
-
-    pub fn clear_reset_return(&mut self) {
-        self.message = ::std::option::Option::None;
-    }
-
-    pub fn has_reset_return(&self) -> bool {
-        match self.message {
-            ::std::option::Option::Some(gymnasium_message::Message::ResetReturn(..)) => true,
-            _ => false,
-        }
-    }
-
-    // Param is passed by value, moved
-    pub fn set_reset_return(&mut self, v: ResetReturn) {
-        self.message = ::std::option::Option::Some(gymnasium_message::Message::ResetReturn(v))
-    }
-
-    // Mutable pointer to the field.
-    pub fn mut_reset_return(&mut self) -> &mut ResetReturn {
-        if let ::std::option::Option::Some(gymnasium_message::Message::ResetReturn(_)) = self.message {
-        } else {
-            self.message = ::std::option::Option::Some(gymnasium_message::Message::ResetReturn(ResetReturn::new()));
-        }
-        match self.message {
-            ::std::option::Option::Some(gymnasium_message::Message::ResetReturn(ref mut v)) => v,
-            _ => panic!(),
-        }
-    }
-
-    // Take field
-    pub fn take_reset_return(&mut self) -> ResetReturn {
-        if self.has_reset_return() {
-            match self.message.take() {
-                ::std::option::Option::Some(gymnasium_message::Message::ResetReturn(v)) => v,
-                _ => panic!(),
-            }
-        } else {
-            ResetReturn::new()
-        }
-    }
-
     // .env.ResetArgs reset_args = 3;
 
     pub fn reset_args(&self) -> &ResetArgs {
@@ -1940,7 +1731,7 @@ impl GymnasiumMessage {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(7);
+        let mut fields = ::std::vec::Vec::with_capacity(6);
         let mut oneofs = ::std::vec::Vec::with_capacity(1);
         fields.push(::protobuf::reflect::rt::v2::make_oneof_message_has_get_mut_set_accessor::<_, StepReturn>(
             "step_return",
@@ -1948,13 +1739,6 @@ impl GymnasiumMessage {
             GymnasiumMessage::step_return,
             GymnasiumMessage::mut_step_return,
             GymnasiumMessage::set_step_return,
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_oneof_message_has_get_mut_set_accessor::<_, ResetReturn>(
-            "reset_return",
-            GymnasiumMessage::has_reset_return,
-            GymnasiumMessage::reset_return,
-            GymnasiumMessage::mut_reset_return,
-            GymnasiumMessage::set_reset_return,
         ));
         fields.push(::protobuf::reflect::rt::v2::make_oneof_message_has_get_mut_set_accessor::<_, ResetArgs>(
             "reset_args",
@@ -2010,9 +1794,6 @@ impl ::protobuf::Message for GymnasiumMessage {
                 10 => {
                     self.message = ::std::option::Option::Some(gymnasium_message::Message::StepReturn(is.read_message()?));
                 },
-                18 => {
-                    self.message = ::std::option::Option::Some(gymnasium_message::Message::ResetReturn(is.read_message()?));
-                },
                 26 => {
                     self.message = ::std::option::Option::Some(gymnasium_message::Message::ResetArgs(is.read_message()?));
                 },
@@ -2046,10 +1827,6 @@ impl ::protobuf::Message for GymnasiumMessage {
                     let len = v.compute_size();
                     my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
                 },
-                &gymnasium_message::Message::ResetReturn(ref v) => {
-                    let len = v.compute_size();
-                    my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
-                },
                 &gymnasium_message::Message::ResetArgs(ref v) => {
                     let len = v.compute_size();
                     my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
@@ -2079,9 +1856,6 @@ impl ::protobuf::Message for GymnasiumMessage {
             match v {
                 &gymnasium_message::Message::StepReturn(ref v) => {
                     ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
-                },
-                &gymnasium_message::Message::ResetReturn(ref v) => {
-                    ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
                 },
                 &gymnasium_message::Message::ResetArgs(ref v) => {
                     ::protobuf::rt::write_message_field_with_cached_size(3, v, os)?;
@@ -2117,7 +1891,6 @@ impl ::protobuf::Message for GymnasiumMessage {
     }
 
     fn clear(&mut self) {
-        self.message = ::std::option::Option::None;
         self.message = ::std::option::Option::None;
         self.message = ::std::option::Option::None;
         self.message = ::std::option::Option::None;
@@ -2162,8 +1935,6 @@ pub mod gymnasium_message {
     pub enum Message {
         // @@protoc_insertion_point(oneof_field:env.GymnasiumMessage.step_return)
         StepReturn(super::StepReturn),
-        // @@protoc_insertion_point(oneof_field:env.GymnasiumMessage.reset_return)
-        ResetReturn(super::ResetReturn),
         // @@protoc_insertion_point(oneof_field:env.GymnasiumMessage.reset_args)
         ResetArgs(super::ResetArgs),
         // @@protoc_insertion_point(oneof_field:env.GymnasiumMessage.action)
@@ -2215,128 +1986,115 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x03(\x0b2\x1b.env.ResetArgs.OptionsEntryR\x07options\x1aR\n\x0cOptionsE\
     ntry\x12\x10\n\x03key\x18\x01\x20\x01(\tR\x03key\x12,\n\x05value\x18\x02\
     \x20\x01(\x0b2\x16.google.protobuf.ValueR\x05value:\x028\x01B\x07\n\x05_\
-    seed\"\xae\x01\n\x0bResetReturn\x12\x1e\n\x03obs\x18\x01\x20\x01(\x0b2\
-    \x0c.env.NDArrayR\x03obs\x12.\n\x04info\x18\x02\x20\x03(\x0b2\x1a.env.Re\
-    setReturn.InfoEntryR\x04info\x1aO\n\tInfoEntry\x12\x10\n\x03key\x18\x01\
-    \x20\x01(\tR\x03key\x12,\n\x05value\x18\x02\x20\x01(\x0b2\x16.google.pro\
-    tobuf.ValueR\x05value:\x028\x01\"\x82\x02\n\nStepReturn\x12\x1e\n\x03obs\
-    \x18\x01\x20\x01(\x0b2\x0c.env.NDArrayR\x03obs\x12\x16\n\x06reward\x18\
-    \x02\x20\x01(\x02R\x06reward\x12\x1e\n\nterminated\x18\x03\x20\x01(\x08R\
-    \nterminated\x12\x1c\n\ttruncated\x18\x04\x20\x01(\x08R\ttruncated\x12-\
-    \n\x04info\x18\x05\x20\x03(\x0b2\x19.env.StepReturn.InfoEntryR\x04info\
-    \x1aO\n\tInfoEntry\x12\x10\n\x03key\x18\x01\x20\x01(\tR\x03key\x12,\n\
-    \x05value\x18\x02\x20\x01(\x0b2\x16.google.protobuf.ValueR\x05value:\x02\
-    8\x01\"\xaf\x02\n\x10GymnasiumMessage\x122\n\x0bstep_return\x18\x01\x20\
-    \x01(\x0b2\x0f.env.StepReturnH\0R\nstepReturn\x125\n\x0creset_return\x18\
-    \x02\x20\x01(\x0b2\x10.env.ResetReturnH\0R\x0bresetReturn\x12/\n\nreset_\
-    args\x18\x03\x20\x01(\x0b2\x0e.env.ResetArgsH\0R\tresetArgs\x12&\n\x06ac\
-    tion\x18\x04\x20\x01(\x0b2\x0c.env.NDArrayH\0R\x06action\x12\x16\n\x05cl\
-    ose\x18\x05\x20\x01(\x08H\0R\x05close\x12\x1a\n\x07request\x18\x06\x20\
-    \x01(\x08H\0R\x07request\x12\x18\n\x06status\x18\x07\x20\x01(\x08H\0R\
-    \x06statusB\t\n\x07message2\x83\x01\n\x03Env\x12'\n\nInitialize\x12\n.en\
-    v.EnvID\x1a\x0b.env.Status\"\0\x12+\n\x05Reset\x12\x0e.env.ResetArgs\x1a\
-    \x10.env.ResetReturn\"\0\x12&\n\x04Step\x12\x0b.env.Action\x1a\x0f.env.S\
-    tepReturn\"\0J\xce\x10\n\x06\x12\x04\0\0Q\x01\n\x08\n\x01\x0c\x12\x03\0\
-    \0\x12\n\t\n\x02\x03\0\x12\x03\x02\0&\n\x08\n\x01\x02\x12\x03\x04\0\x0c\
-    \n\n\n\x02\x06\0\x12\x04\x06\0\x0e\x01\n\n\n\x03\x06\0\x01\x12\x03\x06\
-    \x08\x0b\n\x0b\n\x04\x06\0\x02\0\x12\x03\x08\x02+\n\x0c\n\x05\x06\0\x02\
-    \0\x01\x12\x03\x08\x06\x10\n\x0c\n\x05\x06\0\x02\0\x02\x12\x03\x08\x11\
-    \x16\n\x0c\n\x05\x06\0\x02\0\x03\x12\x03\x08!'\n\x0b\n\x04\x06\0\x02\x01\
-    \x12\x03\n\x02/\n\x0c\n\x05\x06\0\x02\x01\x01\x12\x03\n\x06\x0b\n\x0c\n\
-    \x05\x06\0\x02\x01\x02\x12\x03\n\x0c\x15\n\x0c\n\x05\x06\0\x02\x01\x03\
-    \x12\x03\n\x20+\n\x0b\n\x04\x06\0\x02\x02\x12\x03\x0c\x02*\n\x0c\n\x05\
-    \x06\0\x02\x02\x01\x12\x03\x0c\x06\n\n\x0c\n\x05\x06\0\x02\x02\x02\x12\
-    \x03\x0c\x0b\x11\n\x0c\n\x05\x06\0\x02\x02\x03\x12\x03\x0c\x1c&\n\n\n\
-    \x02\x04\0\x12\x04\x11\0\x13\x01\n\n\n\x03\x04\0\x01\x12\x03\x11\x08\r\n\
-    \x0b\n\x04\x04\0\x02\0\x12\x03\x12\x02\x14\n\x0c\n\x05\x04\0\x02\0\x05\
-    \x12\x03\x12\x02\x08\n\x0c\n\x05\x04\0\x02\0\x01\x12\x03\x12\t\x0f\n\x0c\
-    \n\x05\x04\0\x02\0\x03\x12\x03\x12\x12\x13\n\n\n\x02\x04\x01\x12\x04\x15\
-    \0\x17\x01\n\n\n\x03\x04\x01\x01\x12\x03\x15\x08\x0e\n\x0b\n\x04\x04\x01\
-    \x02\0\x12\x03\x16\x02\x12\n\x0c\n\x05\x04\x01\x02\0\x05\x12\x03\x16\x02\
-    \x06\n\x0c\n\x05\x04\x01\x02\0\x01\x12\x03\x16\x07\r\n\x0c\n\x05\x04\x01\
-    \x02\0\x03\x12\x03\x16\x10\x11\n\n\n\x02\x04\x02\x12\x04\x19\0\x1d\x01\n\
-    \n\n\x03\x04\x02\x01\x12\x03\x19\x08\x12\n\x0b\n\x04\x04\x02\x02\0\x12\
-    \x03\x1a\x04\x13\n\x0c\n\x05\x04\x02\x02\0\x05\x12\x03\x1a\x04\t\n\x0c\n\
-    \x05\x04\x02\x02\0\x01\x12\x03\x1a\n\x0e\n\x0c\n\x05\x04\x02\x02\0\x03\
-    \x12\x03\x1a\x11\x12\n\x0b\n\x04\x04\x02\x02\x01\x12\x03\x1b\x04\x14\n\
-    \x0c\n\x05\x04\x02\x02\x01\x05\x12\x03\x1b\x04\t\n\x0c\n\x05\x04\x02\x02\
-    \x01\x01\x12\x03\x1b\n\x0f\n\x0c\n\x05\x04\x02\x02\x01\x03\x12\x03\x1b\
-    \x12\x13\n\x0b\n\x04\x04\x02\x02\x02\x12\x03\x1c\x04\x15\n\x0c\n\x05\x04\
-    \x02\x02\x02\x05\x12\x03\x1c\x04\n\n\x0c\n\x05\x04\x02\x02\x02\x01\x12\
-    \x03\x1c\x0b\x10\n\x0c\n\x05\x04\x02\x02\x02\x03\x12\x03\x1c\x13\x14\n\n\
-    \n\x02\x04\x03\x12\x04\x1f\0#\x01\n\n\n\x03\x04\x03\x01\x12\x03\x1f\x08\
-    \x0f\n\x0b\n\x04\x04\x03\x02\0\x12\x03\x20\x02\x1b\n\x0c\n\x05\x04\x03\
-    \x02\0\x04\x12\x03\x20\x02\n\n\x0c\n\x05\x04\x03\x02\0\x05\x12\x03\x20\
-    \x0b\x10\n\x0c\n\x05\x04\x03\x02\0\x01\x12\x03\x20\x11\x16\n\x0c\n\x05\
-    \x04\x03\x02\0\x03\x12\x03\x20\x19\x1a\n\x0b\n\x04\x04\x03\x02\x01\x12\
-    \x03!\x02\x1a\n\x0c\n\x05\x04\x03\x02\x01\x04\x12\x03!\x02\n\n\x0c\n\x05\
-    \x04\x03\x02\x01\x05\x12\x03!\x0b\x10\n\x0c\n\x05\x04\x03\x02\x01\x01\
-    \x12\x03!\x11\x15\n\x0c\n\x05\x04\x03\x02\x01\x03\x12\x03!\x18\x19\n\x0b\
-    \n\x04\x04\x03\x02\x02\x12\x03\"\x02\x13\n\x0c\n\x05\x04\x03\x02\x02\x05\
-    \x12\x03\"\x02\x08\n\x0c\n\x05\x04\x03\x02\x02\x01\x12\x03\"\t\x0e\n\x0c\
-    \n\x05\x04\x03\x02\x02\x03\x12\x03\"\x11\x12\n\n\n\x02\x04\x04\x12\x04%\
-    \0'\x01\n\n\n\x03\x04\x04\x01\x12\x03%\x08\x0e\n\x0b\n\x04\x04\x04\x02\0\
-    \x12\x03&\x02\x13\n\x0c\n\x05\x04\x04\x02\0\x05\x12\x03&\x02\x07\n\x0c\n\
-    \x05\x04\x04\x02\0\x01\x12\x03&\x08\x0e\n\x0c\n\x05\x04\x04\x02\0\x03\
-    \x12\x03&\x11\x12\n\n\n\x02\x04\x05\x12\x04)\0+\x01\n\n\n\x03\x04\x05\
-    \x01\x12\x03)\x08\x0c\n\x0b\n\x04\x04\x05\x02\0\x12\x03*\x02\x11\n\x0c\n\
-    \x05\x04\x05\x02\0\x05\x12\x03*\x02\x07\n\x0c\n\x05\x04\x05\x02\0\x01\
-    \x12\x03*\x08\x0c\n\x0c\n\x05\x04\x05\x02\0\x03\x12\x03*\x0f\x10\n\n\n\
-    \x02\x04\x06\x12\x04-\0/\x01\n\n\n\x03\x04\x06\x01\x12\x03-\x08\x0f\n\
-    \x0b\n\x04\x04\x06\x02\0\x12\x03.\x020\n\x0c\n\x05\x04\x06\x02\0\x06\x12\
-    \x03.\x02$\n\x0c\n\x05\x04\x06\x02\0\x01\x12\x03.%+\n\x0c\n\x05\x04\x06\
-    \x02\0\x03\x12\x03../\n\n\n\x02\x04\x07\x12\x041\03\x01\n\n\n\x03\x04\
-    \x07\x01\x12\x031\x08\x0c\n\x0b\n\x04\x04\x07\x02\0\x12\x032\x020\n\x0c\
-    \n\x05\x04\x07\x02\0\x06\x12\x032\x02$\n\x0c\n\x05\x04\x07\x02\0\x01\x12\
-    \x032%+\n\x0c\n\x05\x04\x07\x02\0\x03\x12\x032./\n\n\n\x02\x04\x08\x12\
-    \x045\08\x01\n\n\n\x03\x04\x08\x01\x12\x035\x08\x11\n\x0b\n\x04\x04\x08\
-    \x02\0\x12\x036\x02\x1a\n\x0c\n\x05\x04\x08\x02\0\x04\x12\x036\x02\n\n\
-    \x0c\n\x05\x04\x08\x02\0\x05\x12\x036\x0b\x10\n\x0c\n\x05\x04\x08\x02\0\
-    \x01\x12\x036\x11\x15\n\x0c\n\x05\x04\x08\x02\0\x03\x12\x036\x18\x19\n\
-    \x0b\n\x04\x04\x08\x02\x01\x12\x037\x021\n\x0c\n\x05\x04\x08\x02\x01\x06\
-    \x12\x037\x02$\n\x0c\n\x05\x04\x08\x02\x01\x01\x12\x037%,\n\x0c\n\x05\
-    \x04\x08\x02\x01\x03\x12\x037/0\n\n\n\x02\x04\t\x12\x04:\0=\x01\n\n\n\
-    \x03\x04\t\x01\x12\x03:\x08\x13\n\x0b\n\x04\x04\t\x02\0\x12\x03;\x02\x12\
-    \n\x0c\n\x05\x04\t\x02\0\x06\x12\x03;\x02\t\n\x0c\n\x05\x04\t\x02\0\x01\
-    \x12\x03;\n\r\n\x0c\n\x05\x04\t\x02\0\x03\x12\x03;\x10\x11\n\x0b\n\x04\
-    \x04\t\x02\x01\x12\x03<\x02.\n\x0c\n\x05\x04\t\x02\x01\x06\x12\x03<\x02$\
-    \n\x0c\n\x05\x04\t\x02\x01\x01\x12\x03<%)\n\x0c\n\x05\x04\t\x02\x01\x03\
-    \x12\x03<,-\n\n\n\x02\x04\n\x12\x04?\0E\x01\n\n\n\x03\x04\n\x01\x12\x03?\
-    \x08\x12\n\x0b\n\x04\x04\n\x02\0\x12\x03@\x02\x12\n\x0c\n\x05\x04\n\x02\
-    \0\x06\x12\x03@\x02\t\n\x0c\n\x05\x04\n\x02\0\x01\x12\x03@\n\r\n\x0c\n\
-    \x05\x04\n\x02\0\x03\x12\x03@\x10\x11\n\x0b\n\x04\x04\n\x02\x01\x12\x03A\
-    \x02\x13\n\x0c\n\x05\x04\n\x02\x01\x05\x12\x03A\x02\x07\n\x0c\n\x05\x04\
-    \n\x02\x01\x01\x12\x03A\x08\x0e\n\x0c\n\x05\x04\n\x02\x01\x03\x12\x03A\
-    \x11\x12\n\x0b\n\x04\x04\n\x02\x02\x12\x03B\x02\x16\n\x0c\n\x05\x04\n\
-    \x02\x02\x05\x12\x03B\x02\x06\n\x0c\n\x05\x04\n\x02\x02\x01\x12\x03B\x07\
-    \x11\n\x0c\n\x05\x04\n\x02\x02\x03\x12\x03B\x14\x15\n\x0b\n\x04\x04\n\
-    \x02\x03\x12\x03C\x02\x15\n\x0c\n\x05\x04\n\x02\x03\x05\x12\x03C\x02\x06\
-    \n\x0c\n\x05\x04\n\x02\x03\x01\x12\x03C\x07\x10\n\x0c\n\x05\x04\n\x02\
-    \x03\x03\x12\x03C\x13\x14\n\x0b\n\x04\x04\n\x02\x04\x12\x03D\x02.\n\x0c\
-    \n\x05\x04\n\x02\x04\x06\x12\x03D\x02$\n\x0c\n\x05\x04\n\x02\x04\x01\x12\
-    \x03D%)\n\x0c\n\x05\x04\n\x02\x04\x03\x12\x03D,-\n\n\n\x02\x04\x0b\x12\
-    \x04G\0Q\x01\n\n\n\x03\x04\x0b\x01\x12\x03G\x08\x18\n\x0c\n\x04\x04\x0b\
-    \x08\0\x12\x04H\x02P\x03\n\x0c\n\x05\x04\x0b\x08\0\x01\x12\x03H\x08\x0f\
-    \n\x0b\n\x04\x04\x0b\x02\0\x12\x03I\x04\x1f\n\x0c\n\x05\x04\x0b\x02\0\
-    \x06\x12\x03I\x04\x0e\n\x0c\n\x05\x04\x0b\x02\0\x01\x12\x03I\x0f\x1a\n\
-    \x0c\n\x05\x04\x0b\x02\0\x03\x12\x03I\x1d\x1e\n\x0b\n\x04\x04\x0b\x02\
-    \x01\x12\x03J\x04!\n\x0c\n\x05\x04\x0b\x02\x01\x06\x12\x03J\x04\x0f\n\
-    \x0c\n\x05\x04\x0b\x02\x01\x01\x12\x03J\x10\x1c\n\x0c\n\x05\x04\x0b\x02\
-    \x01\x03\x12\x03J\x1f\x20\n\x0b\n\x04\x04\x0b\x02\x02\x12\x03K\x04\x1d\n\
-    \x0c\n\x05\x04\x0b\x02\x02\x06\x12\x03K\x04\r\n\x0c\n\x05\x04\x0b\x02\
-    \x02\x01\x12\x03K\x0e\x18\n\x0c\n\x05\x04\x0b\x02\x02\x03\x12\x03K\x1b\
-    \x1c\n\x0b\n\x04\x04\x0b\x02\x03\x12\x03L\x04\x17\n\x0c\n\x05\x04\x0b\
-    \x02\x03\x06\x12\x03L\x04\x0b\n\x0c\n\x05\x04\x0b\x02\x03\x01\x12\x03L\
-    \x0c\x12\n\x0c\n\x05\x04\x0b\x02\x03\x03\x12\x03L\x15\x16\n\x0b\n\x04\
-    \x04\x0b\x02\x04\x12\x03M\x04\x13\n\x0c\n\x05\x04\x0b\x02\x04\x05\x12\
-    \x03M\x04\x08\n\x0c\n\x05\x04\x0b\x02\x04\x01\x12\x03M\t\x0e\n\x0c\n\x05\
-    \x04\x0b\x02\x04\x03\x12\x03M\x11\x12\n\x0b\n\x04\x04\x0b\x02\x05\x12\
-    \x03N\x04\x15\n\x0c\n\x05\x04\x0b\x02\x05\x05\x12\x03N\x04\x08\n\x0c\n\
-    \x05\x04\x0b\x02\x05\x01\x12\x03N\t\x10\n\x0c\n\x05\x04\x0b\x02\x05\x03\
-    \x12\x03N\x13\x14\n\x0b\n\x04\x04\x0b\x02\x06\x12\x03O\x04\x14\n\x0c\n\
-    \x05\x04\x0b\x02\x06\x05\x12\x03O\x04\x08\n\x0c\n\x05\x04\x0b\x02\x06\
-    \x01\x12\x03O\t\x0f\n\x0c\n\x05\x04\x0b\x02\x06\x03\x12\x03O\x12\x13b\
-    \x06proto3\
+    seed\"\x82\x02\n\nStepReturn\x12\x1e\n\x03obs\x18\x01\x20\x01(\x0b2\x0c.\
+    env.NDArrayR\x03obs\x12\x16\n\x06reward\x18\x02\x20\x01(\x02R\x06reward\
+    \x12\x1e\n\nterminated\x18\x03\x20\x01(\x08R\nterminated\x12\x1c\n\ttrun\
+    cated\x18\x04\x20\x01(\x08R\ttruncated\x12-\n\x04info\x18\x05\x20\x03(\
+    \x0b2\x19.env.StepReturn.InfoEntryR\x04info\x1aO\n\tInfoEntry\x12\x10\n\
+    \x03key\x18\x01\x20\x01(\tR\x03key\x12,\n\x05value\x18\x02\x20\x01(\x0b2\
+    \x16.google.protobuf.ValueR\x05value:\x028\x01\"\xf8\x01\n\x10GymnasiumM\
+    essage\x122\n\x0bstep_return\x18\x01\x20\x01(\x0b2\x0f.env.StepReturnH\0\
+    R\nstepReturn\x12/\n\nreset_args\x18\x03\x20\x01(\x0b2\x0e.env.ResetArgs\
+    H\0R\tresetArgs\x12&\n\x06action\x18\x04\x20\x01(\x0b2\x0c.env.NDArrayH\
+    \0R\x06action\x12\x16\n\x05close\x18\x05\x20\x01(\x08H\0R\x05close\x12\
+    \x1a\n\x07request\x18\x06\x20\x01(\x08H\0R\x07request\x12\x18\n\x06statu\
+    s\x18\x07\x20\x01(\x08H\0R\x06statusB\t\n\x07message2\x82\x01\n\x03Env\
+    \x12'\n\nInitialize\x12\n.env.EnvID\x1a\x0b.env.Status\"\0\x12*\n\x05Res\
+    et\x12\x0e.env.ResetArgs\x1a\x0f.env.StepReturn\"\0\x12&\n\x04Step\x12\
+    \x0b.env.Action\x1a\x0f.env.StepReturn\"\0J\xed\x0f\n\x06\x12\x04\0\0P\
+    \x01\n\x08\n\x01\x0c\x12\x03\0\0\x12\n\t\n\x02\x03\0\x12\x03\x02\0&\n\
+    \x08\n\x01\x02\x12\x03\x04\0\x0c\n\n\n\x02\x06\0\x12\x04\x06\0\x0e\x01\n\
+    \n\n\x03\x06\0\x01\x12\x03\x06\x08\x0b\n\x0b\n\x04\x06\0\x02\0\x12\x03\
+    \x08\x02+\n\x0c\n\x05\x06\0\x02\0\x01\x12\x03\x08\x06\x10\n\x0c\n\x05\
+    \x06\0\x02\0\x02\x12\x03\x08\x11\x16\n\x0c\n\x05\x06\0\x02\0\x03\x12\x03\
+    \x08!'\n\x0b\n\x04\x06\0\x02\x01\x12\x03\n\x02.\n\x0c\n\x05\x06\0\x02\
+    \x01\x01\x12\x03\n\x06\x0b\n\x0c\n\x05\x06\0\x02\x01\x02\x12\x03\n\x0c\
+    \x15\n\x0c\n\x05\x06\0\x02\x01\x03\x12\x03\n\x20*\n\x0b\n\x04\x06\0\x02\
+    \x02\x12\x03\x0c\x02*\n\x0c\n\x05\x06\0\x02\x02\x01\x12\x03\x0c\x06\n\n\
+    \x0c\n\x05\x06\0\x02\x02\x02\x12\x03\x0c\x0b\x11\n\x0c\n\x05\x06\0\x02\
+    \x02\x03\x12\x03\x0c\x1c&\n\n\n\x02\x04\0\x12\x04\x11\0\x13\x01\n\n\n\
+    \x03\x04\0\x01\x12\x03\x11\x08\r\n\x0b\n\x04\x04\0\x02\0\x12\x03\x12\x02\
+    \x14\n\x0c\n\x05\x04\0\x02\0\x05\x12\x03\x12\x02\x08\n\x0c\n\x05\x04\0\
+    \x02\0\x01\x12\x03\x12\t\x0f\n\x0c\n\x05\x04\0\x02\0\x03\x12\x03\x12\x12\
+    \x13\n\n\n\x02\x04\x01\x12\x04\x15\0\x17\x01\n\n\n\x03\x04\x01\x01\x12\
+    \x03\x15\x08\x0e\n\x0b\n\x04\x04\x01\x02\0\x12\x03\x16\x02\x12\n\x0c\n\
+    \x05\x04\x01\x02\0\x05\x12\x03\x16\x02\x06\n\x0c\n\x05\x04\x01\x02\0\x01\
+    \x12\x03\x16\x07\r\n\x0c\n\x05\x04\x01\x02\0\x03\x12\x03\x16\x10\x11\n\n\
+    \n\x02\x04\x02\x12\x04\x19\0\x1d\x01\n\n\n\x03\x04\x02\x01\x12\x03\x19\
+    \x08\x12\n\x0b\n\x04\x04\x02\x02\0\x12\x03\x1a\x04\x13\n\x0c\n\x05\x04\
+    \x02\x02\0\x05\x12\x03\x1a\x04\t\n\x0c\n\x05\x04\x02\x02\0\x01\x12\x03\
+    \x1a\n\x0e\n\x0c\n\x05\x04\x02\x02\0\x03\x12\x03\x1a\x11\x12\n\x0b\n\x04\
+    \x04\x02\x02\x01\x12\x03\x1b\x04\x14\n\x0c\n\x05\x04\x02\x02\x01\x05\x12\
+    \x03\x1b\x04\t\n\x0c\n\x05\x04\x02\x02\x01\x01\x12\x03\x1b\n\x0f\n\x0c\n\
+    \x05\x04\x02\x02\x01\x03\x12\x03\x1b\x12\x13\n\x0b\n\x04\x04\x02\x02\x02\
+    \x12\x03\x1c\x04\x15\n\x0c\n\x05\x04\x02\x02\x02\x05\x12\x03\x1c\x04\n\n\
+    \x0c\n\x05\x04\x02\x02\x02\x01\x12\x03\x1c\x0b\x10\n\x0c\n\x05\x04\x02\
+    \x02\x02\x03\x12\x03\x1c\x13\x14\n\n\n\x02\x04\x03\x12\x04\x1f\0#\x01\n\
+    \n\n\x03\x04\x03\x01\x12\x03\x1f\x08\x0f\n\x0b\n\x04\x04\x03\x02\0\x12\
+    \x03\x20\x02\x1b\n\x0c\n\x05\x04\x03\x02\0\x04\x12\x03\x20\x02\n\n\x0c\n\
+    \x05\x04\x03\x02\0\x05\x12\x03\x20\x0b\x10\n\x0c\n\x05\x04\x03\x02\0\x01\
+    \x12\x03\x20\x11\x16\n\x0c\n\x05\x04\x03\x02\0\x03\x12\x03\x20\x19\x1a\n\
+    \x0b\n\x04\x04\x03\x02\x01\x12\x03!\x02\x1a\n\x0c\n\x05\x04\x03\x02\x01\
+    \x04\x12\x03!\x02\n\n\x0c\n\x05\x04\x03\x02\x01\x05\x12\x03!\x0b\x10\n\
+    \x0c\n\x05\x04\x03\x02\x01\x01\x12\x03!\x11\x15\n\x0c\n\x05\x04\x03\x02\
+    \x01\x03\x12\x03!\x18\x19\n\x0b\n\x04\x04\x03\x02\x02\x12\x03\"\x02\x13\
+    \n\x0c\n\x05\x04\x03\x02\x02\x05\x12\x03\"\x02\x08\n\x0c\n\x05\x04\x03\
+    \x02\x02\x01\x12\x03\"\t\x0e\n\x0c\n\x05\x04\x03\x02\x02\x03\x12\x03\"\
+    \x11\x12\n\n\n\x02\x04\x04\x12\x04%\0'\x01\n\n\n\x03\x04\x04\x01\x12\x03\
+    %\x08\x0e\n\x0b\n\x04\x04\x04\x02\0\x12\x03&\x02\x13\n\x0c\n\x05\x04\x04\
+    \x02\0\x05\x12\x03&\x02\x07\n\x0c\n\x05\x04\x04\x02\0\x01\x12\x03&\x08\
+    \x0e\n\x0c\n\x05\x04\x04\x02\0\x03\x12\x03&\x11\x12\n\n\n\x02\x04\x05\
+    \x12\x04)\0+\x01\n\n\n\x03\x04\x05\x01\x12\x03)\x08\x0c\n\x0b\n\x04\x04\
+    \x05\x02\0\x12\x03*\x02\x11\n\x0c\n\x05\x04\x05\x02\0\x05\x12\x03*\x02\
+    \x07\n\x0c\n\x05\x04\x05\x02\0\x01\x12\x03*\x08\x0c\n\x0c\n\x05\x04\x05\
+    \x02\0\x03\x12\x03*\x0f\x10\n\n\n\x02\x04\x06\x12\x04-\0/\x01\n\n\n\x03\
+    \x04\x06\x01\x12\x03-\x08\x0f\n\x0b\n\x04\x04\x06\x02\0\x12\x03.\x020\n\
+    \x0c\n\x05\x04\x06\x02\0\x06\x12\x03.\x02$\n\x0c\n\x05\x04\x06\x02\0\x01\
+    \x12\x03.%+\n\x0c\n\x05\x04\x06\x02\0\x03\x12\x03../\n\n\n\x02\x04\x07\
+    \x12\x041\03\x01\n\n\n\x03\x04\x07\x01\x12\x031\x08\x0c\n\x0b\n\x04\x04\
+    \x07\x02\0\x12\x032\x020\n\x0c\n\x05\x04\x07\x02\0\x06\x12\x032\x02$\n\
+    \x0c\n\x05\x04\x07\x02\0\x01\x12\x032%+\n\x0c\n\x05\x04\x07\x02\0\x03\
+    \x12\x032./\n\n\n\x02\x04\x08\x12\x045\08\x01\n\n\n\x03\x04\x08\x01\x12\
+    \x035\x08\x11\n\x0b\n\x04\x04\x08\x02\0\x12\x036\x02\x1a\n\x0c\n\x05\x04\
+    \x08\x02\0\x04\x12\x036\x02\n\n\x0c\n\x05\x04\x08\x02\0\x05\x12\x036\x0b\
+    \x10\n\x0c\n\x05\x04\x08\x02\0\x01\x12\x036\x11\x15\n\x0c\n\x05\x04\x08\
+    \x02\0\x03\x12\x036\x18\x19\n\x0b\n\x04\x04\x08\x02\x01\x12\x037\x021\n\
+    \x0c\n\x05\x04\x08\x02\x01\x06\x12\x037\x02$\n\x0c\n\x05\x04\x08\x02\x01\
+    \x01\x12\x037%,\n\x0c\n\x05\x04\x08\x02\x01\x03\x12\x037/0\nf\n\x02\x04\
+    \t\x12\x04?\0E\x012Zmessage\x20ResetReturn\x20{\n\x20\x20NDArray\x20obs\
+    \x20=\x201;\n\x20\x20map<string,\x20google.protobuf.Value>\x20info\x20=\
+    \x202;\n}\n\n\n\n\x03\x04\t\x01\x12\x03?\x08\x12\n\x0b\n\x04\x04\t\x02\0\
+    \x12\x03@\x02\x12\n\x0c\n\x05\x04\t\x02\0\x06\x12\x03@\x02\t\n\x0c\n\x05\
+    \x04\t\x02\0\x01\x12\x03@\n\r\n\x0c\n\x05\x04\t\x02\0\x03\x12\x03@\x10\
+    \x11\n\x0b\n\x04\x04\t\x02\x01\x12\x03A\x02\x13\n\x0c\n\x05\x04\t\x02\
+    \x01\x05\x12\x03A\x02\x07\n\x0c\n\x05\x04\t\x02\x01\x01\x12\x03A\x08\x0e\
+    \n\x0c\n\x05\x04\t\x02\x01\x03\x12\x03A\x11\x12\n\x0b\n\x04\x04\t\x02\
+    \x02\x12\x03B\x02\x16\n\x0c\n\x05\x04\t\x02\x02\x05\x12\x03B\x02\x06\n\
+    \x0c\n\x05\x04\t\x02\x02\x01\x12\x03B\x07\x11\n\x0c\n\x05\x04\t\x02\x02\
+    \x03\x12\x03B\x14\x15\n\x0b\n\x04\x04\t\x02\x03\x12\x03C\x02\x15\n\x0c\n\
+    \x05\x04\t\x02\x03\x05\x12\x03C\x02\x06\n\x0c\n\x05\x04\t\x02\x03\x01\
+    \x12\x03C\x07\x10\n\x0c\n\x05\x04\t\x02\x03\x03\x12\x03C\x13\x14\n\x0b\n\
+    \x04\x04\t\x02\x04\x12\x03D\x02.\n\x0c\n\x05\x04\t\x02\x04\x06\x12\x03D\
+    \x02$\n\x0c\n\x05\x04\t\x02\x04\x01\x12\x03D%)\n\x0c\n\x05\x04\t\x02\x04\
+    \x03\x12\x03D,-\n\n\n\x02\x04\n\x12\x04G\0P\x01\n\n\n\x03\x04\n\x01\x12\
+    \x03G\x08\x18\n\x0c\n\x04\x04\n\x08\0\x12\x04H\x02O\x03\n\x0c\n\x05\x04\
+    \n\x08\0\x01\x12\x03H\x08\x0f\n\x0b\n\x04\x04\n\x02\0\x12\x03I\x04\x1f\n\
+    \x0c\n\x05\x04\n\x02\0\x06\x12\x03I\x04\x0e\n\x0c\n\x05\x04\n\x02\0\x01\
+    \x12\x03I\x0f\x1a\n\x0c\n\x05\x04\n\x02\0\x03\x12\x03I\x1d\x1e\n\x0b\n\
+    \x04\x04\n\x02\x01\x12\x03J\x04\x1d\n\x0c\n\x05\x04\n\x02\x01\x06\x12\
+    \x03J\x04\r\n\x0c\n\x05\x04\n\x02\x01\x01\x12\x03J\x0e\x18\n\x0c\n\x05\
+    \x04\n\x02\x01\x03\x12\x03J\x1b\x1c\n\x0b\n\x04\x04\n\x02\x02\x12\x03K\
+    \x04\x17\n\x0c\n\x05\x04\n\x02\x02\x06\x12\x03K\x04\x0b\n\x0c\n\x05\x04\
+    \n\x02\x02\x01\x12\x03K\x0c\x12\n\x0c\n\x05\x04\n\x02\x02\x03\x12\x03K\
+    \x15\x16\n\x0b\n\x04\x04\n\x02\x03\x12\x03L\x04\x13\n\x0c\n\x05\x04\n\
+    \x02\x03\x05\x12\x03L\x04\x08\n\x0c\n\x05\x04\n\x02\x03\x01\x12\x03L\t\
+    \x0e\n\x0c\n\x05\x04\n\x02\x03\x03\x12\x03L\x11\x12\n\x0b\n\x04\x04\n\
+    \x02\x04\x12\x03M\x04\x15\n\x0c\n\x05\x04\n\x02\x04\x05\x12\x03M\x04\x08\
+    \n\x0c\n\x05\x04\n\x02\x04\x01\x12\x03M\t\x10\n\x0c\n\x05\x04\n\x02\x04\
+    \x03\x12\x03M\x13\x14\n\x0b\n\x04\x04\n\x02\x05\x12\x03N\x04\x14\n\x0c\n\
+    \x05\x04\n\x02\x05\x05\x12\x03N\x04\x08\n\x0c\n\x05\x04\n\x02\x05\x01\
+    \x12\x03N\t\x0f\n\x0c\n\x05\x04\n\x02\x05\x03\x12\x03N\x12\x13b\x06proto\
+    3\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -2355,7 +2113,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
             deps.push(::protobuf::well_known_types::struct_::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(12);
+            let mut messages = ::std::vec::Vec::with_capacity(11);
             messages.push(EnvID::generated_message_descriptor_data());
             messages.push(Status::generated_message_descriptor_data());
             messages.push(NumpyArray::generated_message_descriptor_data());
@@ -2365,7 +2123,6 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(Options::generated_message_descriptor_data());
             messages.push(Info::generated_message_descriptor_data());
             messages.push(ResetArgs::generated_message_descriptor_data());
-            messages.push(ResetReturn::generated_message_descriptor_data());
             messages.push(StepReturn::generated_message_descriptor_data());
             messages.push(GymnasiumMessage::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(0);

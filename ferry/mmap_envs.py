@@ -27,9 +27,9 @@ class ServerEnv(gym.Env):
 
         response = self.communicator.receive_message()
 
-        if response.HasField("reset_return"):
-            obs = decode(response.reset_return.obs)
-            info = unwrap_dict(response.reset_return.info)
+        if response.HasField("step_return"):
+            obs = decode(response.step_return.obs)
+            info = unwrap_dict(response.step_return.info)
 
             self.communicator.send_message(gym_ferry_pb2.GymnasiumMessage(status=True))
 
@@ -85,9 +85,9 @@ class ClientEnv:  # (gym.Env)
         response = self.communicator.receive_message()
         # self.communicator.release_lock(2)
 
-        if response.HasField("reset_return"):
-            obs = decode(response.reset_return.obs)
-            info = unwrap_dict(response.reset_return.info)
+        if response.HasField("step_return"):
+            obs = decode(response.step_return.obs)
+            info = unwrap_dict(response.step_return.info)
             return obs, info
 
     def step(self, action: np.ndarray | int):
