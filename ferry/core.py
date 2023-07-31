@@ -87,9 +87,9 @@ def create_gymnasium_message(step_return: Optional[tuple[np.ndarray, float, bool
     elif reset_return is not None:
         obs, info = reset_return
 
-        reset_return_ = gym_ferry_pb2.ResetReturn(obs=encode(obs), info=wrap_dict(info))
+        reset_return_ = StepReturn(obs=encode(obs), reward=0, terminated=False, truncated=False, info=wrap_dict(info))
 
-        message.reset_return.CopyFrom(reset_return_)
+        message.step_return.CopyFrom(reset_return_)
 
     elif reset_args is not None:
         seed, options = reset_args

@@ -53,6 +53,9 @@ class ServerEnv(gym.Env):
             self.communicator.send_message(gym_ferry_pb2.GymnasiumMessage(status=True))
 
             return obs, reward, terminated, truncated, info
+        else:
+            print(response)
+            raise ValueError("Received an invalid message")
 
     def close(self):
         self.communicator.close()

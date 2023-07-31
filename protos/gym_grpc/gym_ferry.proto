@@ -29,6 +29,12 @@ message NumpyArray {
     string dtype = 3;
 }
 
+message NDArray {
+  repeated int32 shape = 1;
+  repeated float data = 2;
+  string dtype = 3;
+}
+
 message Action {
   int32 action = 1;
 }
@@ -50,13 +56,13 @@ message ResetArgs {
   map<string, google.protobuf.Value> options = 2;
 }
 
-message ResetReturn {
-  NumpyArray obs = 1;
-  map<string, google.protobuf.Value> info = 2;
-}
+//message ResetReturn {
+//  NDArray obs = 1;
+//  map<string, google.protobuf.Value> info = 2;
+//}
 
 message StepReturn {
-  NumpyArray obs = 1;
+  NDArray obs = 1;
   float reward = 2;
   bool terminated = 3;
   bool truncated = 4;
@@ -68,7 +74,7 @@ message GymnasiumMessage {
     StepReturn step_return = 1;
     ResetReturn reset_return = 2;
     ResetArgs reset_args = 3;
-    NumpyArray action = 4;
+    NDArray action = 4;
     bool close = 5;
     bool request = 6;
     bool status = 7;

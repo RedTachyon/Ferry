@@ -11,13 +11,16 @@ from google.protobuf.struct_pb2 import Value
 from google.protobuf.struct_pb2 import Struct
 
 
-def encode(array: np.ndarray | int) -> gym_ferry_pb2.NumpyArray:
+def encode(array: np.ndarray | int) -> gym_ferry_pb2.NDArray:
     # array = np.asarray(array)
-    return gym_ferry_pb2.NumpyArray(data=array.tobytes(), shape=np.array(array.shape).tobytes(), dtype=str(array.dtype))
+    # return gym_ferry_pb2.NumpyArray(data=array.tobytes(), shape=np.array(array.shape).tobytes(), dtype=str(array.dtype))
+    return gym_ferry_pb2.NDArray(shape=array.shape, data=array.flatten().tolist(), dtype=str(array.dtype))
 
 
-def decode(data: gym_ferry_pb2.NumpyArray) -> np.ndarray:
-    return np.frombuffer(data.data, dtype=data.dtype).reshape(np.frombuffer(data.shape, dtype=int))
+def decode(msg: gym_ferry_pb2.NDArray) -> np.ndarray:
+    # return np.frombuffer(data.data, dtype=data.dtype).reshape(np.frombuffer(data.shape, dtype=int))
+    return np.array(msg.data, dtype=msg.dtype).reshape(msg.shape)
+
 
 
 def wrap_dict(d: dict[str, Any]) -> dict[str, Value]:
