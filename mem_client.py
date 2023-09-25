@@ -5,7 +5,7 @@ from tqdm import trange
 env = ClientEnv()
 
 env.reset()
-for i in trange(100000):
+for i in trange(100_000):
     # print(i)
     action = np.array([0], dtype=int)
     obs, reward, terminated, truncated, info = env.step(action)

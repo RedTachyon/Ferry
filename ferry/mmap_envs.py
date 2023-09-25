@@ -13,7 +13,8 @@ class ServerEnv(gym.Env):
         self.port = port
         self.communicator = Communicator("ferry", create=True)
 
-        self.communicator.receive_message()
+        self.communicator.send_message(gym_ferry_pb2.GymnasiumMessage(status=True))
+        handshake = self.communicator.receive_message()
         self.communicator.send_message(gym_ferry_pb2.GymnasiumMessage(status=True))
 
 
@@ -85,7 +86,6 @@ class ClientEnv:  # (gym.Env)
 
 
         response = self.communicator.receive_message()
-        # self.communicator.release_lock(2)
 
         if response.HasField("step_return"):
             obs = decode(response.step_return.obs)

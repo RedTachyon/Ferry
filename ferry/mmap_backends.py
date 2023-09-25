@@ -17,7 +17,7 @@ class ClientBackend:
         self.communicator = Communicator("ferry", create=False)
 
         self.communicator.send_message(gym_ferry_pb2.GymnasiumMessage(status=True))
-        self.communicator.receive_message() # handshake
+        handshake = self.communicator.receive_message() # handshake
 
 
         print(f"Backend client listening on port {port}")
@@ -40,7 +40,6 @@ class ClientBackend:
 
         while True:
             # Execute whatever logic. When we need a decision, send the current step return and get the decision
-
             msg = create_gymnasium_message(step_return=(obs, reward, terminated, truncated, info))
             self.communicator.send_message(msg)  # 1
             response = self.communicator.receive_message()  # 2
