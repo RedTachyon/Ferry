@@ -8,6 +8,7 @@ use protobuf::{Message, MessageField};
 mod gym_ferry;
 mod backends;
 mod core;
+mod gym_environment;
 
 use gym_ferry::*;
 // use backends::{ClientBackend, ServerBackend};

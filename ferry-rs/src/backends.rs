@@ -1,166 +1,117 @@
-extern crate protobuf;
-use std::io::{Error, ErrorKind};
-use protobuf::{Message};
-use crate::gym_ferry::{GymnasiumMessage, StepReturn, ResetArgs, ResetReturn};
-use crate::core::Communicator;
 use std::collections::HashMap;
+use std::any::Any;
+use std::error::Error;
 
-pub trait GymEnvironment {
-    fn reset(&mut self, seed: Option<i32>, options: HashMap<String, String>) -> Result<(Vec<f32>, HashMap<String, String>), Error>;
-    fn step(&mut self, action: Vec<f32>) -> Result<(Vec<f32>, f32, bool, bool, HashMap<String, String>), Error>;
-    fn close(&mut self) -> Result<(), Error>;
-}
+use protobuf::Message;
+use crate::gym_ferry::{GymnasiumMessage, StepReturn, ResetArgs, NDArray};
+use crate::core::Communicator;
+use crate::gym_environment::GymEnvironment;
 
-struct ClientBackend<T: GymEnvironment> {
-    env: T,
+pub struct ClientBackend {
+    env: Box<dyn GymEnvironment>,
     communicator: Communicator,
 }
 
-impl<T: GymEnvironment> ClientBackend<T> {
-    fn new(env: T, communicator: Communicator) -> ClientBackend<T> {
-        ClientBackend { env, communicator }
+impl ClientBackend {
+    pub fn new(env_id: &str, port: u16) -> Result<ClientBackend, Box<dyn Error>> {
+        let mut env = GymEnvironment::make(env_id)?;
+        env.reset(None, HashMap::new())?;
+
+        let mut communicator = Communicator::new("ferry", 1024, false)?;
+
+        let message = GymnasiumMessage {
+            status: Some(true),
+            ..Default::default()
+        };
+        communicator.send_message(&message)?;
+
+        communicator.receive_message()?;
+
+        println!("Backend client listening on port {}", port);
+
+        Ok(ClientBackend {
+            env,
+            communicator,
+        })
     }
 
-    fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        loop {
-            let mut message = GymnasiumMessage::new();
-            message.set_request(true);
-            self.communicator.send_message(&message)?;
+    pub fn run(&mut self) -> Result<(), Box<dyn Error>> {
+        let message = GymnasiumMessage {
+            request: Some(true),
+            ..Default::default()
+        };
+        self.communicator.send_message(&message)?;
 
-            let response = self.communicator.receive_message()?;
-            if response.has_action() {
-                let action = decode(response.get_action());
-                let (obs, reward, terminated, truncated, info) = self.env.step(action)?;
-                let msg = create_step_return_message((obs, reward, terminated, truncated, info))?;
+        let msg = self.communicator.receive_message()?;
+
+        if let Some(reset_args) = msg.reset_args {
+            let seed = if reset_args.seed != -1 { Some(reset_args.seed) } else { None };
+            let options = unwrap_dict(&reset_args.options)?;
+
+            let (obs, info) = self.env.reset(seed, options)?;
+            let (mut reward, mut terminated, mut truncated) = (0.0, false, false);
+
+            loop {
+                let step_return = StepReturn {
+                    obs: obs.clone(),
+                    reward,
+                    terminated,
+                    truncated,
+                    info: info.clone(),
+                    ..Default::default()
+                };
+                let msg = GymnasiumMessage {
+                    step_return: Some(step_return),
+                    ..Default::default()
+                };
                 self.communicator.send_message(&msg)?;
-            } else if response.has_reset_args() {
-                let seed = if response.get_reset_args().get_seed() != -1 { Some(response.get_reset_args().get_seed()) } else { None };
-                let options = unwrap_dict(response.get_reset_args().get_options());
-                let (obs, info) = self.env.reset(seed, options)?;
-                let msg = create_reset_return_message((obs, info))?;
-                self.communicator.send_message(&msg)?;
-            } else if response.get_close() {
-                self.env.close()?;
-                break;
-            } else {
-                // Raise error
+
+                let response = self.communicator.receive_message()?;
+
+                if let Some(action) = response.action {
+                    let action = decode(&action)?;
+                    let single_action = if action.len() == 1 { action[0] } else { 0.0 };
+                    let (obs, reward, terminated, truncated, info) = self.env.step(vec![single_action])?;
+                } else if let Some(reset_args) = response.reset_args {
+                    let seed = if reset_args.seed != -1 { Some(reset_args.seed) } else { None };
+                    let options = unwrap_dict(&reset_args.options)?;
+                    let (obs, info) = self.env.reset(seed, options)?;
+                    reward = 0.0;
+                    terminated = false;
+                    truncated = false;
+                } else if response.close.unwrap_or(false) {
+                    self.env.close()?;
+                    return Ok(());
+                } else if response.status.is_some() {
+                    continue;
+                } else {
+                    return Err(From::from("Received an invalid message"));
+                }
             }
-            self.communicator.receive_message()?; // Dummy
+        } else {
+            Err(From::from("Environment must be reset before using."))
         }
-        Ok(())
     }
 }
 
-struct ServerBackend<T: GymEnvironment> {
-    env: T,
-    communicator: Communicator,
-}
-
-impl<T: GymEnvironment> ServerBackend<T> {
-    fn new(env: T, communicator: Communicator) -> ServerBackend<T> {
-        ServerBackend { env, communicator }
-    }
-
-    fn process_reset(&mut self, msg: &GymnasiumMessage) -> Result<(), Box<dyn std::error::Error>> {
-        let reset_args = msg.get_reset_args();
-        let seed = if reset_args.get_seed() != -1 { Some(reset_args.get_seed()) } else { None };
-        let options = unwrap_dict(reset_args.get_options());
-        let (obs, info) = self.env.reset(seed, options)?;
-        let response = create_reset_return_message((obs, info))?;
-        self.communicator.send_message(&response)?;
-        Ok(())
-    }
-
-    fn process_close(&mut self, msg: &GymnasiumMessage) -> Result<(), Box<dyn std::error::Error>> {
-        self.env.close()?;
-        self.communicator.close()?;
-        Ok(())
-    }
-
-    fn process_step(&mut self, msg: &GymnasiumMessage) -> Result<(), Box<dyn std::error::Error>> {
-        let action = decode(msg.get_action());
-        let (obs, reward, terminated, truncated, info) = self.env.step(action)?;
-        let response = create_step_return_message((obs, reward, terminated, truncated, info))?;
-        self.communicator.send_message(&response)?;
-        Ok(())
-    }
-
-    fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        loop {
-            let msg = self.communicator.receive_message()?;
-            if msg.has_action() {
-                self.process_step(&msg)?;
-            } else if msg.has_reset_args() {
-                self.process_reset(&msg)?;
-            } else if msg.get_close() {
-                self.process_close(&msg)?;
-                break;
-            }
-        }
-        Ok(())
+pub fn encode(array: &Vec<f32>) -> NDArray {
+    NDArray {
+        shape: vec![array.len() as i32],
+        data: array.clone(),
+        dtype: "float".to_string(),
+        ..Default::default()
     }
 }
 
-// Decodes a Vec<f32> from a protobuf float list
-fn decode(pb_float_list: &protobuf::RepeatedField<f32>) -> Vec<f32> {
-    pb_float_list.into_iter().cloned().collect()
+pub fn decode(msg: &NDArray) -> Result<Vec<f32>, Box<dyn Error>> {
+    Ok(msg.data.clone())
 }
 
-// Unwraps a protobuf Dict into a Rust HashMap
-fn unwrap_dict(pb_dict: &Dict) -> HashMap<String, String> {
-    let mut map = HashMap::new();
-    for (k, v) in pb_dict.get_items().iter() {
-        map.insert(k.to_string(), v.to_string());
+pub fn unwrap_dict(d: &HashMap<String, Value>) -> Result<HashMap<String, String>, Box<dyn Error>> {
+    let mut new_dict = HashMap::new();
+    for (k, v) in d.iter() {
+        new_dict.insert(k.clone(), v.clone());
     }
-    map
+    Ok(new_dict)
 }
 
-
-
-fn create_step_return_message(step_return: (Vec<f32>, f32, bool, bool, HashMap<String, String>)) -> Result<GymnasiumMessage, Box<dyn std::error::Error>> {
-    let (obs, reward, terminated, truncated, info) = step_return;
-    let mut step_return_msg = StepReturn::new();
-    step_return_msg.set_obs(RepeatedField::from_vec(obs));
-    step_return_msg.set_reward(reward);
-    step_return_msg.set_terminated(terminated);
-    step_return_msg.set_truncated(truncated);
-    // step_return_msg.set_info(wrap_dict(info)?);  // Need to implement wrap_dict
-
-    let mut gym_message = GymnasiumMessage::new();
-    gym_message.set_step_return(step_return_msg);
-    Ok(gym_message)
-}
-
-fn create_reset_return_message(reset_return: (Vec<f32>, HashMap<String, String>)) -> Result<GymnasiumMessage, Box<dyn std::error::Error>> {
-    let (obs, info) = reset_return;
-    let mut reset_return_msg = ResetReturn::new();
-    reset_return_msg.set_obs(RepeatedField::from_vec(obs));
-    // reset_return_msg.set_info(wrap_dict(info)?);  // Need to implement wrap_dict
-
-    let mut gym_message = GymnasiumMessage::new();
-    gym_message.set_reset_return(reset_return_msg);
-    Ok(gym_message)
-}
-
-fn create_reset_args_message(reset_args: (i32, HashMap<String, String>)) -> Result<GymnasiumMessage, Box<dyn std::error::Error>> {
-    let (seed, options) = reset_args;
-    let mut reset_args_msg = ResetArgs::new();
-    reset_args_msg.set_seed(seed);
-    // reset_args_msg.set_options(wrap_dict(options)?);  // Need to implement wrap_dict
-
-    let mut gym_message = GymnasiumMessage::new();
-    gym_message.set_reset_args(reset_args_msg);
-    Ok(gym_message)
-}
-
-fn create_action_message(action: Vec<f32>) -> GymnasiumMessage {
-    let mut gym_message = GymnasiumMessage::new();
-    // gym_message.set_action(RepeatedField::from_vec(action));
-    gym_message
-}
-
-fn create_close_message(close: bool) -> GymnasiumMessage {
-    let mut gym_message = GymnasiumMessage::new();
-    gym_message.set_close(close);
-    gym_message
-}
