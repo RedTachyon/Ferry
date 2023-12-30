@@ -69,8 +69,8 @@ class ClientBackend:
 
 
 class ServerBackend:
-    def __init__(self, env_id: str, port: int = 50051):
-        self.env = gym.make(env_id)
+    def __init__(self, env_id: str, port: int = 50051, env_kwargs: dict = {}):
+        self.env = gym.make(env_id, **env_kwargs)
         self.env.reset()
 
         self.communicator = Communicator("ferry", create=True)
